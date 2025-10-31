@@ -3,7 +3,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
 import { db, storage } from '@/lib/firebase/config';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
 
@@ -31,11 +31,21 @@ export default function ProfilePage() {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setProfile({ ...profile, ...docSnap.data() });
-        }
-        
-        if (user.displayName) {
-          setProfile(prev => ({ ...prev, displayName: user.displayName }));
+          const userData = docSnap.data();
+          setProfile({
+            displayName: userData.displayName || user.displayName || '',
+            bio: userData.bio || '',
+            website: userData.website || '',
+            twitter: userData.twitter || '',
+            github: userData.github || '',
+            linkedin: userData.linkedin || '',
+          });
+        } else {
+          // Document doesn't exist, set default values from auth
+          setProfile(prev => ({ 
+            ...prev, 
+            displayName: user.displayName || '' 
+          }));
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -61,7 +71,16 @@ export default function ProfilePage() {
       await uploadBytes(storageRef, file);
       const photoURL = await getDownloadURL(storageRef);
 
+      // Update Firebase Auth profile
       await updateProfile(user, { photoURL });
+      
+      // Update Firestore profile
+      const docRef = doc(db, 'users', user.uid);
+      await setDoc(docRef, {
+        photoURL,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
       setMessage({ type: 'success', text: 'Profile photo updated!' });
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -84,17 +103,20 @@ export default function ProfilePage() {
         await updateProfile(user, { displayName: profile.displayName });
       }
 
-      // Update Firestore profile
+      // Update or create Firestore profile document
       const docRef = doc(db, 'users', user.uid);
-      await updateDoc(docRef, {
+      await setDoc(docRef, {
+        uid: user.uid,
+        email: user.email,
         displayName: profile.displayName,
         bio: profile.bio,
         website: profile.website,
         twitter: profile.twitter,
         github: profile.github,
         linkedin: profile.linkedin,
-        updatedAt: new Date(),
-      });
+        photoURL: user.photoURL || '',
+        updatedAt: serverTimestamp(),
+      }, { merge: true }); // Use merge to not overwrite createdAt
 
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error) {

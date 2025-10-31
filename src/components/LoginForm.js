@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from './AuthProvider';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -12,6 +12,10 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Get redirect URL from query params
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +24,8 @@ export default function LoginForm() {
 
     try {
       await signIn(email, password);
-      router.push('/');
+      // Redirect to the original page or dashboard
+      router.push(redirectUrl);
     } catch (err) {
       setError(err.message || 'Failed to sign in. Please check your credentials.');
     } finally {

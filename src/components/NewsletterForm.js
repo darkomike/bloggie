@@ -30,6 +30,7 @@ export default function NewsletterForm() {
         setMessage(data.error || 'Something went wrong. Please try again.');
       }
     } catch (error) {
+      console.error('Newsletter subscription error:', error);
       setStatus('error');
       setMessage('Failed to subscribe. Please try again later.');
     }
@@ -51,7 +52,7 @@ export default function NewsletterForm() {
             placeholder="Enter your email"
             required
             disabled={status === 'loading'}
-            className="w-full rounded-md border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full rounded-md border text-black border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
           />
         </div>
 

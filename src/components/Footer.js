@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import NewsletterSubscribeForm from './NewsletterSubscribeForm';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -76,12 +77,7 @@ export default function Footer() {
             <p className="mt-3 sm:mt-4 text-sm text-gray-600 dark:text-gray-400">
               Subscribe to get the latest posts delivered to your inbox.
             </p>
-            <Link
-              href="/newsletter"
-              className="mt-3 sm:mt-4 inline-block rounded-md bg-gray-900 dark:bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
-            >
-              Subscribe
-            </Link>
+            <NewsletterSubscribeForm />
           </div>
         </div>
 

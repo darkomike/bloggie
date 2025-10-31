@@ -9,7 +9,8 @@ import {
   onAuthStateChanged,
   updateProfile,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { auth, db } from '@/lib/firebase/config';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const AuthContext = createContext({
   user: null,
@@ -54,11 +55,34 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password, displayName) => {
     if (!auth) throw new Error('Firebase Auth is not configured');
+    if (!db) throw new Error('Firebase Firestore is not configured');
+    
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      if (displayName && result.user) {
-        await updateProfile(result.user, { displayName });
+      
+      if (result.user) {
+        // Update display name in Firebase Auth
+        if (displayName) {
+          await updateProfile(result.user, { displayName });
+        }
+        
+        // Save user data to Firestore
+        const userRef = doc(db, 'users', result.user.uid);
+        await setDoc(userRef, {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: displayName || '',
+          bio: '',
+          website: '',
+          twitter: '',
+          github: '',
+          linkedin: '',
+          photoURL: result.user.photoURL || '',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
       }
+      
       return result;
     } catch (error) {
       if (error.code === 'auth/operation-not-allowed') {

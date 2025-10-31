@@ -3,7 +3,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -21,12 +21,10 @@ export default function DashboardPage() {
       if (!user) return;
 
       try {
-        // Fetch user's posts
+        // Fetch user's posts (without orderBy to avoid composite index requirement)
         const postsQuery = query(
           collection(db, 'posts'),
-          where('authorId', '==', user.uid),
-          orderBy('createdAt', 'desc'),
-          limit(5)
+          where('authorId', '==', user.uid)
         );
         const postsSnapshot = await getDocs(postsQuery);
         const posts = postsSnapshot.docs.map(doc => ({
@@ -34,9 +32,18 @@ export default function DashboardPage() {
           ...doc.data()
         }));
 
-        setRecentPosts(posts);
+        // Sort by createdAt descending and take first 5
+        const sortedPosts = posts
+          .sort((a, b) => {
+            const aTime = a.createdAt?.toDate?.() || new Date(0);
+            const bTime = b.createdAt?.toDate?.() || new Date(0);
+            return bTime - aTime;
+          })
+          .slice(0, 5);
 
-        // Calculate stats
+        setRecentPosts(sortedPosts);
+
+        // Calculate stats from all posts
         let totalViews = 0;
         let totalComments = 0;
         let totalLikes = 0;

@@ -1,22 +1,144 @@
-import { blogService } from '@/lib/firebase/blog-service';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase/config';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Blog - Bloggie',
-  description: 'Explore our collection of insightful articles and stories',
-};
+export default function BlogPage() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default async function BlogPage() {
-  let posts = [];
-  try {
-    posts = await blogService.getAllPosts();
-  } catch (error) {
-    console.error('Error fetching posts:', error);
-  }
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const postsRef = collection(db, 'posts');
+        // Temporarily removed orderBy to avoid needing a composite index
+        // Add back orderBy('createdAt', 'desc') after creating the Firestore index
+        const q = query(
+          postsRef,
+          where('published', '==', true)
+        );
+        const querySnapshot = await getDocs(q);
+        
+        const postsData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        }));
+        
+        // Sort on client-side for now
+        postsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        setPosts(postsData);
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   const categories = ['All', 'Technology', 'Design', 'Business', 'Lifestyle'];
   const featuredPost = posts[0];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900">
+        <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-12 sm:py-16 md:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-3 sm:mb-4">
+                Our Blog
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-blue-100 max-w-2xl mx-auto px-4">
+                Insights, stories, and knowledge from industry experts
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading posts...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900">
+        <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-12 sm:py-16 md:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-3 sm:mb-4">
+                Our Blog
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-blue-100 max-w-2xl mx-auto px-4">
+                Insights, stories, and knowledge from industry experts
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <p className="text-red-600 dark:text-red-400 mb-4">Error loading posts: {error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900">
+        <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-12 sm:py-16 md:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-3 sm:mb-4">
+                Our Blog
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-blue-100 max-w-2xl mx-auto px-4">
+                Insights, stories, and knowledge from industry experts
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <svg className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">No posts yet</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">Be the first to write a blog post!</p>
+            <Link
+              href="/blog/new"
+              className="inline-flex items-center px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+            >
+              <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Your First Post
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">

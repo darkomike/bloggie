@@ -32,7 +32,7 @@ export const blogService = {
 
     const constraints = [
       where('published', '==', true),
-      orderBy('publishedAt', 'desc'),
+      orderBy('createdAt', 'desc'),
     ];
 
     if (limitCount) {
@@ -45,7 +45,7 @@ export const blogService = {
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      publishedAt: doc.data().publishedAt?.toDate(),
+      createdAt: doc.data().createdAt?.toDate(),
       updatedAt: doc.data().updatedAt?.toDate(),
     }));
   },
@@ -71,7 +71,7 @@ export const blogService = {
     return {
       id: docSnap.id,
       ...docSnap.data(),
-      publishedAt: docSnap.data().publishedAt?.toDate(),
+      createdAt: docSnap.data().createdAt?.toDate(),
       updatedAt: docSnap.data().updatedAt?.toDate(),
     };
   },
@@ -90,7 +90,7 @@ export const blogService = {
     return {
       id: docSnap.id,
       ...docSnap.data(),
-      publishedAt: docSnap.data().publishedAt?.toDate(),
+      createdAt: docSnap.data().createdAt?.toDate(),
       updatedAt: docSnap.data().updatedAt?.toDate(),
     };
   },
@@ -100,7 +100,7 @@ export const blogService = {
     const constraints = [
       where('published', '==', true),
       where('category', '==', category),
-      orderBy('publishedAt', 'desc'),
+      orderBy('createdAt', 'desc'),
     ];
 
     if (limitCount) {
@@ -113,7 +113,7 @@ export const blogService = {
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      publishedAt: doc.data().publishedAt?.toDate(),
+      createdAt: doc.data().createdAt?.toDate(),
       updatedAt: doc.data().updatedAt?.toDate(),
     }));
   },
@@ -123,7 +123,7 @@ export const blogService = {
     const constraints = [
       where('published', '==', true),
       where('tags', 'array-contains', tag),
-      orderBy('publishedAt', 'desc'),
+      orderBy('createdAt', 'desc'),
     ];
 
     if (limitCount) {
@@ -136,7 +136,7 @@ export const blogService = {
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      publishedAt: doc.data().publishedAt?.toDate(),
+      createdAt: doc.data().createdAt?.toDate(),
       updatedAt: doc.data().updatedAt?.toDate(),
     }));
   },
@@ -145,8 +145,8 @@ export const blogService = {
   async createPost(post) {
     const docRef = await addDoc(collection(db, POSTS_COLLECTION), {
       ...post,
-      publishedAt: Timestamp.fromDate(post.publishedAt),
-      updatedAt: post.updatedAt ? Timestamp.fromDate(post.updatedAt) : null,
+      createdAt: post.createdAt ? Timestamp.fromDate(post.createdAt) : Timestamp.now(),
+      updatedAt: post.updatedAt ? Timestamp.fromDate(post.updatedAt) : Timestamp.now(),
     });
 
     return docRef.id;
@@ -157,8 +157,8 @@ export const blogService = {
     const docRef = doc(db, POSTS_COLLECTION, id);
     const updateData = { ...post };
 
-    if (post.publishedAt) {
-      updateData.publishedAt = Timestamp.fromDate(post.publishedAt);
+    if (post.createdAt) {
+      updateData.createdAt = Timestamp.fromDate(post.createdAt);
     }
     if (post.updatedAt) {
       updateData.updatedAt = Timestamp.fromDate(post.updatedAt);

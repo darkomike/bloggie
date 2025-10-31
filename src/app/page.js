@@ -1,7 +1,82 @@
 import { blogService } from '@/lib/firebase/blog-service';
 import BlogCard from '@/components/BlogCard';
 import NewsletterForm from '@/components/NewsletterForm';
+import HeroSection from '@/components/HeroSection';
 import Link from 'next/link';
+import { db } from '@/lib/firebase/config';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+
+async function getStats() {
+  try {
+    // Fetch all published posts
+    const postsRef = collection(db, 'posts');
+    const publishedQuery = query(postsRef, where('published', '==', true));
+    const postsSnapshot = await getDocs(publishedQuery);
+    
+    const posts = postsSnapshot.docs.map(doc => doc.data());
+    const totalPosts = posts.length;
+    
+    // Get unique categories
+    const categoriesSet = new Set(posts.map(post => post.category).filter(Boolean));
+    const totalCategories = categoriesSet.size;
+    
+    // Get unique authors
+    const authorsSet = new Set(posts.map(post => post.authorId).filter(Boolean));
+    const totalAuthors = authorsSet.size;
+    
+    // Calculate total views
+    const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
+    
+    return {
+      totalPosts,
+      totalCategories,
+      totalAuthors,
+      totalViews,
+    };
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    return {
+      totalPosts: 0,
+      totalCategories: 10,
+      totalAuthors: 0,
+      totalViews: 0,
+    };
+  }
+}
+
+async function getCategoryStats() {
+  try {
+    const postsRef = collection(db, 'posts');
+    const publishedQuery = query(postsRef, where('published', '==', true));
+    const postsSnapshot = await getDocs(publishedQuery);
+    
+    const posts = postsSnapshot.docs.map(doc => doc.data());
+    
+    // Count posts per category
+    const categoryCounts = {};
+    for (const post of posts) {
+      if (post.category) {
+        categoryCounts[post.category] = (categoryCounts[post.category] || 0) + 1;
+      }
+    }
+    
+    return categoryCounts;
+  } catch (error) {
+    console.error('Error fetching category stats:', error);
+    return {};
+  }
+}
+
+function formatNumber(num) {
+  if (num === 0) return '0';
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+  return num.toString();
+}
 
 export default async function Home() {
   // Fetch latest blog posts
@@ -12,13 +87,17 @@ export default async function Home() {
     console.error('Error fetching posts:', error);
   }
 
+  // Fetch real statistics
+  const dbStats = await getStats();
+  const categoryCounts = await getCategoryStats();
+
   const isFirebaseConfigured = process.env.NEXT_PUBLIC_FIREBASE_API_KEY && 
                                 process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
   const categories = [
     { 
       name: 'Technology', 
-      count: 24, 
+      count: categoryCounts['Technology'] || 0, 
       color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
       icon: (
         <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -28,7 +107,7 @@ export default async function Home() {
     },
     { 
       name: 'Design', 
-      count: 18, 
+      count: categoryCounts['Design'] || 0, 
       color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
       icon: (
         <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -38,7 +117,7 @@ export default async function Home() {
     },
     { 
       name: 'Business', 
-      count: 15, 
+      count: categoryCounts['Business'] || 0, 
       color: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
       icon: (
         <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -48,7 +127,7 @@ export default async function Home() {
     },
     { 
       name: 'Lifestyle', 
-      count: 12, 
+      count: categoryCounts['Lifestyle'] || 0, 
       color: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400',
       icon: (
         <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,7 +140,7 @@ export default async function Home() {
   const stats = [
     { 
       label: 'Articles Published', 
-      value: '100+',
+      value: dbStats.totalPosts > 0 ? formatNumber(dbStats.totalPosts) : '0',
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -70,7 +149,7 @@ export default async function Home() {
     },
     { 
       label: 'Active Readers', 
-      value: '10K+',
+      value: dbStats.totalViews > 0 ? formatNumber(dbStats.totalViews) : '0',
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -79,7 +158,7 @@ export default async function Home() {
     },
     { 
       label: 'Categories', 
-      value: '12+',
+      value: dbStats.totalCategories > 0 ? dbStats.totalCategories.toString() : '10',
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -88,7 +167,7 @@ export default async function Home() {
     },
     { 
       label: 'Authors', 
-      value: '25+',
+      value: dbStats.totalAuthors > 0 ? dbStats.totalAuthors.toString() : '0',
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -148,58 +227,8 @@ export default async function Home() {
         </div>
       )}
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 py-12 sm:py-16 md:py-20 text-white dark:from-blue-800 dark:via-blue-900 dark:to-indigo-950">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-            backgroundSize: '40px 40px'
-          }} />
-        </div>
-
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="mb-4 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold leading-tight tracking-tight">
-              Welcome to{' '}
-              <span className="bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent">
-                Bloggie
-              </span>
-            </h1>
-            <p className="mb-3 sm:mb-4 text-lg sm:text-xl md:text-2xl text-blue-100 px-4">
-              Discover insights, stories, and knowledge shared by professionals
-            </p>
-            <p className="mb-8 sm:mb-10 text-base sm:text-lg text-blue-200 max-w-2xl mx-auto px-4">
-              Join thousands of readers exploring articles on technology, design, business, and more.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-              <Link
-                href="/blog"
-                className="inline-flex items-center justify-center rounded-lg bg-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold text-blue-600 shadow-lg hover:bg-gray-50 transition-all hover:scale-105"
-              >
-                Explore Articles
-                <svg className="ml-2 h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center rounded-lg border-2 border-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold text-white hover:bg-white/10 transition-all"
-              >
-                Join Community
-              </Link>
-            </div>
-
-            <div className="mt-12 sm:mt-16 grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 md:grid-cols-4">
-              {stats.map((stat) => (
-                <div key={stat.label} className="rounded-lg bg-white/10 backdrop-blur-sm p-4 sm:p-6">
-                  <div className="mb-2">{stat.icon}</div>
-                  <div className="text-2xl sm:text-3xl font-bold">{stat.value}</div>
-                  <div className="text-xs sm:text-sm text-blue-200">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section */}
+      <HeroSection stats={stats} />
 
       <section className="py-12 sm:py-16 bg-gray-50 dark:bg-gray-800/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
