@@ -1,4 +1,4 @@
-import { db } from './firebase-config';
+import { db } from './config';
 import NewsletterModel from '../../models/newsletterModel';
 
 const NEWSLETTER_COLLECTION = 'newsletter';

@@ -1,4 +1,4 @@
-import { db } from './firebase-config';
+import { db } from './config';
 import ContactModel from '../../models/contactModel';
 
 const CONTACTS_COLLECTION = 'contacts';

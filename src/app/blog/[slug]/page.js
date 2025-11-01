@@ -644,31 +644,32 @@ export default function BlogPostPage() {
 
       <article className="min-h-screen bg-white dark:bg-gray-900">
         {post.coverImage && (
-          <div className="relative w-full h-64 sm:h-96 md:h-112 lg:h-128">
+          <div className="relative w-full h-48 sm:h-72 md:h-96 lg:h-[28rem] xl:h-[32rem]">
             <Image
               src={post.coverImage}
               alt={post.title}
               fill
               className="object-cover"
-              sizes="100vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw"
               priority
             />
-            <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent" />
-            <div className="absolute bottom-6 left-6 right-6">
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/30 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 lg:p-12">
               <div className="text-white">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="px-3 py-1 bg-blue-600 rounded-full text-sm font-medium">
-                    {post.category}
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 sm:mb-4 md:mb-6">
+                  <span className="px-2.5 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-blue-600 hover:bg-blue-700 rounded-full text-xs sm:text-sm md:text-base font-bold transition-colors">
+                    ✨ {post.category}
                   </span>
-                  <span className="text-sm opacity-90">
+                  <span className="text-xs sm:text-sm md:text-base opacity-90 flex items-center">
+                    <span className="mr-1">⏱️</span>
                     {calculateReadingTime(post.content)} min read
                   </span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold mb-2 leading-tight">
+                <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 md:mb-4 leading-tight">
                   {post.title}
                 </h1>
                 {post.excerpt && (
-                  <p className="text-lg opacity-90 max-w-3xl">
+                  <p className="text-sm sm:text-base md:text-lg lg:text-xl opacity-95 max-w-4xl line-clamp-2 sm:line-clamp-3">
                     {post.excerpt}
                   </p>
                 )}
@@ -677,31 +678,32 @@ export default function BlogPostPage() {
           </div>
         )}
 
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="mx-auto max-w-4xl px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10 md:py-12 lg:py-16">
           {!post.coverImage && (
-            <div className="mb-8">
-              <div className="flex items-center gap-4 mb-4">
-                <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
-                  {post.category}
+            <div className="mb-8 sm:mb-10 md:mb-12">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-5">
+                <span className="px-2.5 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-blue-600 text-white rounded-full text-xs sm:text-sm md:text-base font-bold">
+                  ✨ {post.category}
                 </span>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 flex items-center">
+                  <span className="mr-1">⏱️</span>
                   {calculateReadingTime(post.content)} min read
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white mb-3 sm:mb-4 md:mb-6 leading-tight">
                 {post.title}
               </h1>
               {post.excerpt && (
-                <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-700 dark:text-gray-300 mb-4 sm:mb-6 md:mb-8 leading-relaxed max-w-3xl">
                   {post.excerpt}
                 </p>
               )}
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 pb-6 sm:pb-8 mb-8 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center ring-2 ring-blue-100 dark:ring-blue-900">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 pb-6 sm:pb-8 mb-8 sm:mb-10 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center ring-2 ring-blue-100 dark:ring-blue-900 shrink-0">
                 {post.author?.avatar ? (
                   <Image
                     src={post.author.avatar}
@@ -712,39 +714,41 @@ export default function BlogPostPage() {
                     priority
                   />
                 ) : (
-                  <span className="text-lg font-bold text-white">
+                  <span className="text-xs sm:text-sm md:text-base font-bold text-white">
                     {post.author?.name?.[0] || post.author?.email?.[0] || 'A'}
                   </span>
                 )}
               </div>
-              <div className="ml-4">
-                <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+              <div>
+                <p className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white">
                   {post.author?.name || 'Anonymous'}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Author</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Author</p>
               </div>
             </div>
 
-            <div className="flex items-center text-sm sm:text-base text-gray-600 dark:text-gray-400">
-              <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {new Date(post.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </div>
-
-            {viewsCount !== null && (
-              <div className="flex items-center text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center">
+                <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                {viewsCount} views
+                {new Date(post.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
               </div>
-            )}
+
+              {viewsCount !== null && (
+                <div className="flex items-center">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <span>{viewsCount} {viewsCount === 1 ? 'view' : 'views'}</span>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="max-w-none">
@@ -764,28 +768,30 @@ export default function BlogPostPage() {
             </ReactMarkdown>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-              <div className="flex flex-wrap items-center gap-4">
+          <div className="mt-10 sm:mt-12 md:mt-16 pt-6 sm:pt-8 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-8 sm:mb-10">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-semibold transition-colors ${userLiked ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                  className={`flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${userLiked ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                   onClick={handleLike}
                   aria-label={userLiked ? 'Unlike this post' : 'Like this post'}
                 >
-                  <svg className="h-5 w-5" fill={userLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5" fill={userLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
-                  <span>{likesCount || 0} {likesCount === 1 ? 'Like' : 'Likes'}</span>
+                  <span className="hidden xs:inline">{likesCount || 0}</span>
+                  <span className="inline xs:hidden">❤️</span>
                 </button>
                 <button
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-semibold"
+                  className="flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 font-semibold text-sm sm:text-base"
                   onClick={handleEnhancedShare}
                   aria-label="Share this post"
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
-                  <span>{sharesCount || 0} {sharesCount === 1 ? 'Share' : 'Shares'}</span>
+                  <span className="hidden xs:inline">{sharesCount || 0}</span>
+                  <span className="inline xs:hidden">📤</span>
                 </button>
               </div>
 
@@ -799,31 +805,32 @@ export default function BlogPostPage() {
                       router.push('/blog/new');
                     }
                   }}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold transition-colors"
+                  className="flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg"
                   aria-label={user?.uid === post?.author?.uid ? 'Edit this post' : 'Create new post'}
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     {user?.uid === post?.author?.uid ? (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     ) : (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     )}
                   </svg>
-                  <span>{user?.uid === post?.author?.uid ? 'Edit Post' : 'New Post'}</span>
+                  <span className="hidden xs:inline">{user?.uid === post?.author?.uid ? 'Edit' : 'New'}</span>
+                  <span className="inline xs:hidden">✏️</span>
                 </button>
               )}
             </div>
 
             {showShareModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-md">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-xl font-semibold text-gray-900 dark:text-white">Share this post</h4>
+                  <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">📤 Share this post</h4>
                   <button
                     onClick={() => setShowShareModal(false)}
                     className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
-                    <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -834,7 +841,7 @@ export default function BlogPostPage() {
                 </div>
                 
                 <div className="mb-4">
-                  <label htmlFor="share-link" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="share-link" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Copy link:
                   </label>
                   <div className="flex items-center gap-2">
@@ -843,7 +850,7 @@ export default function BlogPostPage() {
                       type="text"
                       value={shareLink}
                       readOnly
-                      className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm"
+                      className="flex-1 px-2 sm:px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs sm:text-sm"
                     />
                     <button
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
