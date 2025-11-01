@@ -136,9 +136,10 @@ export default function SearchBar() {
       </div>
 
       {/* Search Results Dropdown */}
-      {isOpen && (searchQuery.length > 0 || searchResults.length > 0) && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto">
-          {isLoading ? (
+      {(() => {
+        let dropdownContent = null;
+        if (isLoading) {
+          dropdownContent = (
             <div className="px-4 py-8 text-center">
               <div className="inline-block">
                 <svg className="h-6 w-6 text-blue-600 dark:text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,7 +147,9 @@ export default function SearchBar() {
                 </svg>
               </div>
             </div>
-          ) : searchResults.length > 0 ? (
+          );
+        } else if (searchResults.length > 0) {
+          dropdownContent = (
             <div className="py-2">
               {searchResults.map((post) => (
                 <Link
@@ -176,13 +179,23 @@ export default function SearchBar() {
                 </div>
               )}
             </div>
-          ) : searchQuery ? (
+          );
+        } else if (searchQuery) {
+          dropdownContent = (
             <div className="px-4 py-8 text-center">
               <p className="text-gray-600 dark:text-gray-400">{`No posts found for "${searchQuery}"`}</p>
             </div>
-          ) : null}
-        </div>
-      )}
+          );
+        }
+
+        return (
+          isOpen && (searchQuery.length > 0 || searchResults.length > 0) && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto">
+              {dropdownContent}
+            </div>
+          )
+        );
+      })()}
     </div>
   );
 }

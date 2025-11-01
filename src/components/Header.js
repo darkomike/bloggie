@@ -77,6 +77,32 @@ export default function Header() {
             >
               Categories
             </Link>
+
+            {/* Profile & Dashboard links (visible when logged in) */}
+            {!loading && user && (
+              <>
+                <Link
+                  href="/profile"
+                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                    isActiveLink('/profile', pathname)
+                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
+                  }`}
+                >
+                  👤 Profile
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                    isActiveLink('/dashboard', pathname)
+                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
+                  }`}
+                >
+                  📊 Dashboard
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Search Bar */}
@@ -106,23 +132,9 @@ export default function Header() {
                     {userMenuOpen && (
                       <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800 overflow-hidden">
                         <div className="py-1">
-                          <Link
-                            href="/profile"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-                            onClick={() => setUserMenuOpen(false)}
-                          >
-                            👤 Profile
-                          </Link>
-                          <Link
-                            href="/dashboard"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-                            onClick={() => setUserMenuOpen(false)}
-                          >
-                            📊 Dashboard
-                          </Link>
                           <button
                             onClick={handleSignOut}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 dark:text-gray-300 dark:hover:bg-red-900/20 transition-colors border-t border-gray-100 dark:border-gray-700"
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 dark:text-gray-300 dark:hover:bg-red-900/20 transition-colors font-medium"
                           >
                             🚪 Sign out
                           </button>
@@ -199,6 +211,34 @@ export default function Header() {
               >
                 🏷️ Categories
               </Link>
+
+              {/* Profile & Dashboard links (visible when logged in) */}
+              {!loading && user && (
+                <>
+                  <Link
+                    href="/profile"
+                    className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-all ${
+                      isActiveLink('/profile', pathname)
+                        ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    👤 Profile
+                  </Link>
+                  <Link
+                    href="/dashboard"
+                    className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-all ${
+                      isActiveLink('/dashboard', pathname)
+                        ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    📊 Dashboard
+                  </Link>
+                </>
+              )}
               
               {!loading && !user && (
                 <div className="space-y-1 border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
@@ -216,6 +256,20 @@ export default function Header() {
                   >
                     Sign up
                   </Link>
+                </div>
+              )}
+
+              {!loading && user && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left rounded-lg px-4 py-2.5 text-base font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    🚪 Sign out
+                  </button>
                 </div>
               )}
             </div>
