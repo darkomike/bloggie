@@ -100,11 +100,19 @@ export async function uploadBlob(file, path) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      if (response.status === 413) {
-        throw new Error(`File too large: ${error.error}. Please use a smaller image.`);
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = { error: `Server error: ${response.statusText}` };
       }
-      throw new Error(error.error || 'Upload failed');
+      
+      console.error('Upload failed with status', response.status, errorData);
+      
+      if (response.status === 413) {
+        throw new Error(errorData.error || 'File too large. Please use a smaller image.');
+      }
+      throw new Error(errorData.error || `Upload failed (status: ${response.status})`);
     }
 
     const { url } = await response.json();

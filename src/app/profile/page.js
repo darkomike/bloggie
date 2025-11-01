@@ -90,35 +90,67 @@ export default function ProfilePage() {
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file || !user) {
+      console.warn('Missing file or user', { hasFile: !!file, hasUser: !!user });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please select an image file' });
+      return;
+    }
+
+    // Validate file size (max 2MB as shown in UI)
+    const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+    if (file.size > MAX_SIZE) {
+      setMessage({ type: 'error', text: `File is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Max size is 2MB.` });
+      return;
+    }
 
     setUploading(true);
     try {
+      console.log(`Starting upload for file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+
       // Delete old avatar if exists
       if (user.photoURL) {
         try {
+          console.log('Deleting old avatar:', user.photoURL);
           await deleteBlob(user.photoURL);
+          console.log('Old avatar deleted successfully');
         } catch (err) {
           console.warn('Could not delete old avatar:', err);
         }
       }
 
+      console.log('Uploading new avatar...');
       const photoURL = await uploadUserAvatar(file, user.uid);
+      console.log('Avatar uploaded successfully:', photoURL);
 
       // Update Firebase Auth profile
       await updateProfile(user, { photoURL });
+      console.log('Firebase Auth profile updated');
       
       // Update Firestore profile using userService
       await userService.updateUser(user.uid, {
         photoURL,
       });
+      console.log('Firestore profile updated');
 
-      setMessage({ type: 'success', text: 'Profile photo updated!' });
+      setMessage({ type: 'success', text: 'Profile photo updated successfully!' });
     } catch (error) {
       console.error('Error uploading image:', error);
-      setMessage({ type: 'error', text: 'Failed to upload image' });
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
+      const errorMessage = error.message || 'Failed to upload image. Please try again.';
+      setMessage({ type: 'error', text: errorMessage });
     } finally {
       setUploading(false);
+      // Clear file input
+      e.target.value = '';
     }
   };
 

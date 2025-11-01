@@ -56,25 +56,31 @@ export const userService = {
 
   // Create or update user
   async upsertUser(user) {
-    const userData = user instanceof UserModel ? user.toFirestore() : user;
-    userData.createdAt = userData.createdAt ? Timestamp.fromDate(userData.createdAt) : Timestamp.now();
+    const userData = { ...user };
+    userData.createdAt = userData.createdAt instanceof Timestamp ? userData.createdAt : (userData.createdAt ? Timestamp.fromDate(new Date(userData.createdAt)) : Timestamp.now());
     userData.updatedAt = Timestamp.now();
     const docRef = doc(db, USERS_COLLECTION, userData.uid);
     await setDoc(docRef, userData, { merge: true });
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) return null;
-    return UserModel.fromFirestore({ id: docSnap.id, ...docSnap.data() });
+    return {
+      id: docSnap.id,
+      ...docSnap.data(),
+    };
   },
 
   // Update user
   async updateUser(uid, user) {
     const docRef = doc(db, USERS_COLLECTION, uid);
-    const updateData = user instanceof UserModel ? user.toFirestore() : user;
+    const updateData = { ...user };
     updateData.updatedAt = Timestamp.now();
     await updateDoc(docRef, updateData);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) return null;
-    return UserModel.fromFirestore({ id: docSnap.id, ...docSnap.data() });
+    return {
+      id: docSnap.id,
+      ...docSnap.data(),
+    };
   },
 
   // Delete user
@@ -133,7 +139,10 @@ export const userService = {
       
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) return null;
-      return UserModel.fromFirestore({ id: docSnap.id, ...docSnap.data() });
+      return {
+        id: docSnap.id,
+        ...docSnap.data(),
+      };
     } catch (error) {
       console.error('Error changing username:', error);
       throw error;

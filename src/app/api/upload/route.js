@@ -14,37 +14,57 @@ export async function POST(request) {
     const path = formData.get('path');
 
     if (!file || !path) {
+      console.error('Missing file or path', { hasFile: !!file, hasPath: !!path });
       return Response.json(
         { error: 'Missing file or path' },
         { status: 400 }
       );
     }
 
+    console.log(`Uploading file to: ${path}, size: ${file.size} bytes`);
+
     // Check file size before uploading
     const buffer = await file.arrayBuffer();
     if (buffer.byteLength > MAX_FILE_SIZE) {
+      const sizeMB = (buffer.byteLength / 1024 / 1024).toFixed(2);
+      console.error(`File too large: ${sizeMB}MB (max 5MB)`);
       return Response.json(
         { 
-          error: `File size (${(buffer.byteLength / 1024 / 1024).toFixed(2)}MB) exceeds maximum allowed size (5MB). Please compress your image.` 
+          error: `File size (${sizeMB}MB) exceeds maximum allowed size (5MB). Please compress your image.` 
         },
         { status: 413 }
       );
     }
 
+    console.log('Calling Vercel Blob put()...');
     const blob = await put(path, buffer, {
       access: 'public',
       contentType: file.type,
     });
 
+    console.log('Upload successful:', blob.url);
     return Response.json({ url: blob.url });
   } catch (error) {
     console.error('Error uploading to Vercel Blob:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+    });
     
     // Handle specific error cases
     if (error?.message?.includes('413')) {
       return Response.json(
         { error: 'File too large. Please compress your image to under 5MB.' },
         { status: 413 }
+      );
+    }
+
+    if (error?.message?.includes('Unauthorized') || error?.message?.includes('token')) {
+      console.error('Authentication error with Vercel Blob token');
+      return Response.json(
+        { error: 'Upload service authentication failed. Please try again later.' },
+        { status: 401 }
       );
     }
     
