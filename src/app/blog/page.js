@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase/config';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { blogService } from '@/lib/firebase/blog-service';
 import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
 
@@ -14,25 +13,8 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const postsRef = collection(db, 'posts');
-        // Temporarily removed orderBy to avoid needing a composite index
-        // Add back orderBy('createdAt', 'desc') after creating the Firestore index
-        const q = query(
-          postsRef,
-          where('published', '==', true)
-        );
-        const querySnapshot = await getDocs(q);
-        
-        const postsData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-          updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        }));
-        
-        // Sort on client-side for now
-        postsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
+        // Use blog service to fetch published posts
+        const postsData = await blogService.getAllPosts();
         setPosts(postsData);
       } catch (err) {
         console.error('Error fetching posts:', err);
@@ -92,7 +74,7 @@ export default function BlogPage() {
           <div className="text-center">
             <p className="text-red-600 dark:text-red-400 mb-4">Error loading posts: {error}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => globalThis.location.reload()}
               className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
             >
               Retry

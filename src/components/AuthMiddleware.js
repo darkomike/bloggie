@@ -41,8 +41,21 @@ export default function AuthMiddleware({ children }) {
     if (!loading) {
       // Redirect to login if trying to access protected route without auth
       if (routeType.isProtectedRoute && !user) {
-        router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+        const redirectUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
+        console.log('AuthMiddleware redirect:', redirectUrl);
+        router.push(redirectUrl);
         return;
+      }
+
+      // Redirect to blog page after user is logged in from a redirect from a blog page
+      if (routeType.isAuthRoute && user) {
+        const searchParams = new URLSearchParams(window.location.search);
+        const redirect = searchParams.get('redirect');
+        if (redirect) {
+          console.log('AuthMiddleware redirect after login:', redirect);
+          router.push(redirect);
+          return;
+        }
       }
 
       // Redirect to dashboard if trying to access auth pages while logged in

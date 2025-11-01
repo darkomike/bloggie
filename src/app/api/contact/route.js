@@ -22,14 +22,19 @@ export async function POST(request) {
       );
     }
 
-    // Save to Firestore
-    await addDoc(collection(db, 'contacts'), {
+    // Save to Firestore via contactService
+    const contactService = (await import('@/lib/firebase/contact-service')).default;
+    const contact = await contactService.createContact({
       name,
       email,
-      subject,
-      message,
-      createdAt: Timestamp.now(),
+      message: `${subject}\n${message}`,
     });
+    if (!contact) {
+      return NextResponse.json(
+        { error: 'Failed to save contact message.' },
+        { status: 500 }
+      );
+    }
 
     // Send notification to admin
     await emailService.sendContactFormNotification({

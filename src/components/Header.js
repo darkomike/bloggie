@@ -32,12 +32,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-8">
-            <Link
-              href="/"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors dark:text-gray-300 dark:hover:text-white"
-            >
-              Home
-            </Link>
+            
             <Link
               href="/blog"
               className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors dark:text-gray-300 dark:hover:text-white"
@@ -158,13 +153,7 @@ export default function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4 dark:border-gray-700">
             <div className="space-y-2">
-              <Link
-                href="/"
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Home
-              </Link>
+              
               <Link
                 href="/blog"
                 className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"

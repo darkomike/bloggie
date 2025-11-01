@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { blogService } from '@/lib/firebase/blog-service';
 import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
 
@@ -203,28 +202,13 @@ export default function CategoryPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       if (!slug) return;
-
       try {
         setLoading(true);
-        const postsRef = collection(db, 'posts');
-        const q = query(
-          postsRef,
-          where('published', '==', true),
-          where('category', '==', categoryInfo.name)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const fetchedPosts = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            createdAt: data.createdAt?.toDate?.() || new Date(),
-          };
-        });
-
+        // Fetch all posts and filter by category (case-insensitive)
+        const allPosts = await blogService.getAllPosts();
+        const filteredPosts = allPosts.filter(post => post.category && post.category.toLowerCase() === categoryInfo.name.toLowerCase());
         // Sort by date
-        const sortedPosts = fetchedPosts.sort((a, b) => b.createdAt - a.createdAt);
+        const sortedPosts = filteredPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setPosts(sortedPosts);
       } catch (err) {
         console.error('Error fetching category posts:', err);
@@ -233,7 +217,6 @@ export default function CategoryPage() {
         setLoading(false);
       }
     };
-
     fetchPosts();
   }, [slug, categoryInfo.name]);
 
@@ -315,63 +298,71 @@ export default function CategoryPage() {
 
       {/* Posts Grid */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
-        {error ? (
-          <div className="text-center py-12">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="text-center py-16 sm:py-20">
-            <div className={`mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${colors.icon} mb-6`}>
-              <svg className="h-12 w-12 sm:h-14 sm:w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">
-              No posts yet
-            </h3>
-            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-              We haven&apos;t published any articles in this category yet. Check back soon!
-            </p>
-            <Link
-              href="/blog"
-              className="inline-flex items-center px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Browse All Posts
-            </Link>
-          </div>
-        ) : (
-          <>
-            {/* Stats Bar */}
-            <div className="mb-8 sm:mb-12">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                    Latest Articles
-                  </h2>
-                  <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                    Showing {posts.length} {posts.length === 1 ? 'article' : 'articles'}
-                  </p>
-                </div>
-                <Link
-                  href="/categories"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        {(() => {
+          if (error) {
+            return (
+              <div className="text-center py-12">
+                <p className="text-red-600 dark:text-red-400">{error}</p>
+              </div>
+            );
+          }
+          if (posts.length === 0) {
+            return (
+              <div className="text-center py-16 sm:py-20">
+                <div className={`mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${colors.icon} mb-6`}>
+                  <svg className="h-12 w-12 sm:h-14 sm:w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  All Categories
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">
+                  No posts yet
+                </h3>
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+                  We haven&apos;t published any articles in this category yet. Check back soon!
+                </p>
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Browse All Posts
                 </Link>
               </div>
-            </div>
+            );
+          }
+          return (
+            <>
+              {/* Stats Bar */}
+              <div className="mb-8 sm:mb-12">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                      Latest Articles
+                    </h2>
+                    <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                      Showing {posts.length} {posts.length === 1 ? 'article' : 'articles'}
+                    </p>
+                  </div>
+                  <Link
+                    href="/categories"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                    All Categories
+                  </Link>
+                </div>
+              </div>
 
-            {/* Posts Grid */}
-            <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {posts.map((post) => (
-                <BlogCard key={post.id} post={post} />
-              ))}
-            </div>
-          </>
-        )}
+              {/* Posts Grid */}
+              <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {posts.map((post) => (
+                  <BlogCard key={post.id} post={post} />
+                ))}
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );

@@ -2,31 +2,30 @@ import { blogService } from '@/lib/firebase/blog-service';
 import BlogCard from '@/components/BlogCard';
 import NewsletterForm from '@/components/NewsletterForm';
 import HeroSection from '@/components/HeroSection';
+import CategoryCarousel from '@/components/CategoryCarousel';
 import Link from 'next/link';
-import { db } from '@/lib/firebase/config';
-import { collection, getDocs, query, where } from 'firebase/firestore';
 
 async function getStats() {
   try {
-    // Fetch all published posts
-    const postsRef = collection(db, 'posts');
-    const publishedQuery = query(postsRef, where('published', '==', true));
-    const postsSnapshot = await getDocs(publishedQuery);
-    
-    const posts = postsSnapshot.docs.map(doc => doc.data());
+    // Use blogService for posts
+    const posts = await blogService.getAllPosts();
     const totalPosts = posts.length;
-    
-    // Get unique categories
+
+    // Categories from posts
     const categoriesSet = new Set(posts.map(post => post.category).filter(Boolean));
     const totalCategories = categoriesSet.size;
-    
-    // Get unique authors
-    const authorsSet = new Set(posts.map(post => post.authorId).filter(Boolean));
+
+    // Authors from posts
+    const authorsSet = new Set(posts.map(post => post.author?.uid).filter(Boolean));
     const totalAuthors = authorsSet.size;
-    
-    // Calculate total views
-    const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
-    
+
+    // Views from viewService
+    let totalViews = 0;
+    if (typeof (await import('@/lib/firebase/view-service')).viewService.getAllViews === 'function') {
+      const allViews = await (await import('@/lib/firebase/view-service')).viewService.getAllViews();
+      totalViews = Array.isArray(allViews) ? allViews.length : 0;
+    }
+
     return {
       totalPosts,
       totalCategories,
@@ -46,20 +45,16 @@ async function getStats() {
 
 async function getCategoryStats() {
   try {
-    const postsRef = collection(db, 'posts');
-    const publishedQuery = query(postsRef, where('published', '==', true));
-    const postsSnapshot = await getDocs(publishedQuery);
-    
-    const posts = postsSnapshot.docs.map(doc => doc.data());
-    
-    // Count posts per category
+    const posts = await blogService.getAllPosts();
     const categoryCounts = {};
     for (const post of posts) {
       if (post.category) {
-        categoryCounts[post.category] = (categoryCounts[post.category] || 0) + 1;
+        // Normalize category: lowercase and trim
+        const normalized = post.category.trim().toLowerCase();
+        categoryCounts[normalized] = (categoryCounts[normalized] || 0) + 1;
+        console.log(`Category: ${normalized}, Count: ${categoryCounts[normalized]}`); // Debug log
       }
     }
-    
     return categoryCounts;
   } catch (error) {
     console.error('Error fetching category stats:', error);
@@ -94,10 +89,11 @@ export default async function Home() {
   const isFirebaseConfigured = process.env.NEXT_PUBLIC_FIREBASE_API_KEY && 
                                 process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-  const categories = [
+  // All possible categories
+  const allCategories = [
     { 
       name: 'Technology', 
-      count: categoryCounts['Technology'] || 0, 
+      count: categoryCounts['technology'] || 0, 
       color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
       icon: (
         <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -107,7 +103,7 @@ export default async function Home() {
     },
     { 
       name: 'Design', 
-      count: categoryCounts['Design'] || 0, 
+      count: categoryCounts['design'] || 0, 
       color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
       icon: (
         <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -117,7 +113,7 @@ export default async function Home() {
     },
     { 
       name: 'Business', 
-      count: categoryCounts['Business'] || 0, 
+      count: categoryCounts['business'] || 0, 
       color: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
       icon: (
         <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -127,7 +123,7 @@ export default async function Home() {
     },
     { 
       name: 'Lifestyle', 
-      count: categoryCounts['Lifestyle'] || 0, 
+      count: categoryCounts['lifestyle'] || 0, 
       color: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400',
       icon: (
         <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -135,7 +131,151 @@ export default async function Home() {
         </svg>
       )
     },
+    {
+      name: 'Marketing',
+      count: categoryCounts['marketing'] || 0,
+      color: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9h.01M8 16h.01M9 12h.01" />
+        </svg>
+      )
+    },
+    {
+      name: 'Education',
+      count: categoryCounts['education'] || 0,
+      color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17.25m20-11.002c5.5 0 10 4.745 10 11.002M15 6.75h.008v.008H15V6.75z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Health',
+      count: categoryCounts['health'] || 0,
+      color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Travel',
+      count: categoryCounts['travel'] || 0,
+      color: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21l-7-5m0 0l-7 5m7-5v8m0-8l7-5m-7 5L5 11m7-5l7 5" />
+        </svg>
+      )
+    },
+    {
+      name: 'Science',
+      count: categoryCounts['science'] || 0,
+      color: 'bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Finance',
+      count: categoryCounts['finance'] || 0,
+      color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Sports',
+      count: categoryCounts['sports'] || 0,
+      color: 'bg-lime-100 dark:bg-lime-900/30 text-lime-600 dark:text-lime-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Food',
+      count: categoryCounts['food'] || 0,
+      color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Entertainment',
+      count: categoryCounts['entertainment'] || 0,
+      color: 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16a1 1 0 001 1h8a1 1 0 001-1V4m0 0L7 4m8 0l5-4m-5 4v10l-4-2.667M7 4l5-4m0 4v10l4-2.667" />
+        </svg>
+      )
+    },
+    {
+      name: 'Politics',
+      count: categoryCounts['politics'] || 0,
+      color: 'bg-slate-100 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4a6 6 0 016-6h3a6 6 0 016 6v4m0 0h4a2 2 0 002-2v-6a6 6 0 00-6-6h-3a6 6 0 00-6 6v6a2 2 0 002 2h4z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Environment',
+      count: categoryCounts['environment'] || 0,
+      color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9-9a9 9 0 019 9" />
+        </svg>
+      )
+    },
+    {
+      name: 'Relationships',
+      count: categoryCounts['relationships'] || 0,
+      color: 'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Art',
+      count: categoryCounts['art'] || 0,
+      color: 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+      )
+    },
+    {
+      name: 'Music',
+      count: categoryCounts['music'] || 0,
+      color: 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400',
+      icon: (
+        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" />
+        </svg>
+      )
+    },
   ];
+
+  // Filter categories to only show those with at least one article
+  const categories = allCategories.filter(category => category.count > 0);
 
   const stats = [
     { 
@@ -235,23 +375,11 @@ export default async function Home() {
           <div className="mb-8 sm:mb-12 text-center">
             <h2 className="mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Explore Topics</h2>
             <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
-              Browse articles by category
+              Browse articles by category • Hover to pause • Click to explore
             </p>
           </div>
 
-          <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-4">
-            {categories.map((category) => (
-              <Link
-                key={category.name}
-                href={`/category/${category.name.toLowerCase()}`}
-                className={`group rounded-xl p-4 sm:p-6 text-center transition-all hover:scale-105 hover:shadow-lg ${category.color}`}
-              >
-                <div className="mb-2 sm:mb-3 flex justify-center [&>svg]:h-8 [&>svg]:w-8 sm:[&>svg]:h-10 sm:[&>svg]:w-10">{category.icon}</div>
-                <h3 className="text-lg sm:text-xl font-bold mb-1">{category.name}</h3>
-                <p className="text-xs sm:text-sm opacity-75">{category.count} articles</p>
-              </Link>
-            ))}
-          </div>
+          <CategoryCarousel categories={categories} />
         </div>
       </section>
 

@@ -1,12 +1,15 @@
+
 'use client';
 
 import { useAuth } from '@/components/AuthProvider';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import Image from 'next/image';
+import { blogService } from '@/lib/firebase/blog-service';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { calculateReadingTime } from '@/lib/utils';
+import { TimeUtil } from '@/utils/timeUtils';
+import ReactMarkdown from 'react-markdown';
+import { previewMarkdownComponents, remarkPlugins } from '@/lib/markdown/markdownComponents';
 
 export default function NewBlogPage() {
   const { user } = useAuth();
@@ -25,6 +28,7 @@ export default function NewBlogPage() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
 
   const categories = [
     'Technology',
@@ -85,7 +89,6 @@ export default function NewBlogPage() {
 
     try {
       let coverImageUrl = '';
-
       // Upload cover image if provided
       if (coverImage) {
         setUploading(true);
@@ -94,8 +97,7 @@ export default function NewBlogPage() {
         coverImageUrl = await getDownloadURL(imageRef);
         setUploading(false);
       }
-
-      // Create blog post document
+      // Create blog post using blogService
       const blogPost = {
         title: formData.title,
         slug: formData.slug,
@@ -103,22 +105,19 @@ export default function NewBlogPage() {
         excerpt: formData.excerpt,
         content: formData.content,
         coverImage: coverImageUrl,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        readingTime: calculateReadingTime(formData.content),
-        authorId: user.uid,
-        authorName: user.displayName || user.email,
-        authorEmail: user.email,
-        authorPhoto: user.photoURL || '',
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        readingTime: TimeUtil.calculateReadingTime(formData.content),
         published: formData.published,
-        views: 0,
-        likesCount: 0,
-        commentsCount: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        author: {
+          uid: user.uid,
+          name: user.displayName || '',
+          email: user.email || '',
+          avatar: user.photoURL || '',
+        },
       };
-
-      const docRef = await addDoc(collection(db, 'posts'), blogPost);
-
+      await blogService.createPost(blogPost);
       // Redirect to the blog post or dashboard
       if (formData.published) {
         router.push(`/blog/${formData.slug}`);
@@ -166,18 +165,21 @@ export default function NewBlogPage() {
       </div>
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Form Section */}
+          <form onSubmit={handleSubmit} className={`space-y-6 ${showPreview ? 'lg:w-1/2' : 'w-full'}`}>
           {/* Cover Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Cover Image
             </label>
             {coverImagePreview ? (
-              <div className="relative">
-                <img
+              <div className="relative w-full h-64">
+                <Image
                   src={coverImagePreview}
                   alt="Cover preview"
-                  className="w-full h-64 object-cover rounded-lg"
+                  fill
+                  className="object-cover rounded-lg"
                 />
                 <button
                   type="button"
@@ -348,6 +350,13 @@ export default function NewBlogPage() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className="flex-1 px-6 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+            >
+              {showPreview ? 'Hide Preview' : 'Show Preview'}
+            </button>
+            <button
               type="submit"
               disabled={saving || uploading}
               className="flex-1 px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -363,6 +372,59 @@ export default function NewBlogPage() {
             </button>
           </div>
         </form>
+
+        {/* Preview Section */}
+        {showPreview && (
+          <div className="lg:w-1/2 lg:sticky lg:top-8 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Preview</h3>
+              
+              {/* Cover Image Preview */}
+              {coverImagePreview && (
+                <div className="mb-6 relative w-full h-64">
+                  <Image
+                    src={coverImagePreview}
+                    alt="Cover preview"
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                </div>
+              )}
+
+              {/* Title and Category */}
+              <div className="mb-4">
+                {formData.category && (
+                  <span className="inline-block px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-medium mb-2">
+                    {formData.category}
+                  </span>
+                )}
+                {formData.title && (
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    {formData.title}
+                  </h2>
+                )}
+                {formData.excerpt && (
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    {formData.excerpt}
+                  </p>
+                )}
+              </div>
+
+              {/* Content Preview */}
+              {formData.content && (
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-code:text-blue-600 dark:prose-code:text-blue-400">
+                  <ReactMarkdown
+                    remarkPlugins={remarkPlugins}
+                    components={previewMarkdownComponents}
+                  >
+                    {String(formData.content)}
+                  </ReactMarkdown>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        </div>
       </div>
     </div>
   );

@@ -1,124 +1,66 @@
-import Link from 'next/link';
+"use client"
 
-export const metadata = {
-  title: 'Categories - Bloggie',
-  description: 'Browse articles by category',
-};
+import Link from 'next/link';
+import  { useState,useEffect } from 'react';
 
 export default function CategoriesPage() {
-  const categories = [
-    {
-      name: 'Technology',
-      description: 'Latest tech trends, programming tutorials, and software development insights',
-      count: 45,
-      color: 'from-blue-500 to-cyan-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Design',
-      description: 'UI/UX design principles, creative inspiration, and design systems',
-      count: 32,
-      color: 'from-purple-500 to-pink-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Business',
-      description: 'Entrepreneurship, marketing strategies, and business growth tips',
-      count: 28,
-      color: 'from-green-500 to-emerald-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Lifestyle',
-      description: 'Health, wellness, productivity, and personal development',
-      count: 24,
-      color: 'from-pink-500 to-rose-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Science',
-      description: 'Scientific discoveries, research findings, and innovations',
-      count: 19,
-      color: 'from-indigo-500 to-blue-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Travel',
-      description: 'Travel guides, destination reviews, and adventure stories',
-      count: 15,
-      color: 'from-cyan-500 to-blue-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Food',
-      description: 'Delicious recipes, cooking tips, and culinary adventures',
-      count: 12,
-      color: 'from-orange-500 to-red-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Health',
-      description: 'Fitness, nutrition, mental wellness, and medical insights',
-      count: 18,
-      color: 'from-red-500 to-pink-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Education',
-      description: 'Learning resources, study tips, and educational insights',
-      count: 14,
-      color: 'from-yellow-500 to-orange-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Entertainment',
-      description: 'Movies, music, gaming, and pop culture reviews',
-      count: 11,
-      color: 'from-fuchsia-500 to-purple-500',
-      icon: (
-        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-  ];
+  const [categories, setCategories] = useState([]);
+  useEffect(() => {
+    async function fetchCategories() {
+      const { blogService } = await import('@/lib/firebase/blog-service');
+      const posts = await blogService.getAllPosts();
+      // Aggregate categories and counts
+      const categoryMap = {};
+      for (const post of posts) {
+        const cat = post.category?.trim();
+        if (!cat) continue;
+        const key = cat.toLowerCase();
+        if (!categoryMap[key]) {
+          categoryMap[key] = {
+            name: cat.charAt(0).toUpperCase() + cat.slice(1),
+            description: '', // Optionally fill from a config or first post
+            count: 0,
+            color: 'from-gray-500 to-gray-800', // Optionally map colors
+            icon: null, // Optionally map icons
+          };
+        }
+        categoryMap[key].count++;
+      }
+      // Optionally fill description, color, icon from a config
+      // Example config for known categories
+      const CATEGORY_CONFIG = {
+        technology: {
+          description: 'Latest tech trends, programming tutorials, and software development insights',
+          color: 'from-blue-500 to-cyan-500',
+          icon: (
+            <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          ),
+        },
+        design: {
+          description: 'UI/UX design principles, creative inspiration, and design systems',
+          color: 'from-purple-500 to-pink-500',
+          icon: (
+            <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+          ),
+        },
+        // ...add configs for other categories as needed
+      };
+      // Merge config into categoryMap
+      Object.keys(categoryMap).forEach(key => {
+        if (CATEGORY_CONFIG[key]) {
+          categoryMap[key].description = CATEGORY_CONFIG[key].description;
+          categoryMap[key].color = CATEGORY_CONFIG[key].color;
+          categoryMap[key].icon = CATEGORY_CONFIG[key].icon;
+        }
+      });
+      setCategories(Object.values(categoryMap));
+    }
+    fetchCategories();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">

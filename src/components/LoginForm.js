@@ -24,10 +24,15 @@ export default function LoginForm() {
 
     try {
       await signIn(email, password);
+      // Debug log for redirect
+      console.log('Redirect after login:', redirectUrl);
       // Redirect to the original page or dashboard
       router.push(redirectUrl);
     } catch (err) {
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
+      console.error('Sign in error:', err);
+      setError(
+         'Failed to sign in. Please check your credentials.'
+      );
     } finally {
       setLoading(false);
     }
