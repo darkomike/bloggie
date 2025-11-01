@@ -3,21 +3,28 @@
 import { useAuth } from '@/components/AuthProvider';
 import Link from 'next/link';
 import PropTypes from 'prop-types';
+import Image from 'next/image';
 
 export default function HeroSection({ stats }) {
   const { user } = useAuth();
 
   return (
-    <div className="relative bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-          backgroundSize: '40px 40px'
-        }}></div>
+    <div className="relative overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/assets/images/home.jpg"
+          alt="Bloggie - Your blogging platform"
+          fill
+          className="object-cover"
+          priority
+        />
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/50 dark:bg-black/60"></div>
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24 lg:py-32">
+      {/* Content */}
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24 lg:py-32">
         <div className="text-center text-white">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-4 sm:mb-6">
             Welcome to{' '}
@@ -25,8 +32,8 @@ export default function HeroSection({ stats }) {
               Bloggie
             </span>
           </h1>
-          <p className="mb-8 sm:mb-10 text-base sm:text-lg text-blue-200 max-w-2xl mx-auto px-4">
-            Join thousands of readers exploring articles on technology, design, business, and more.
+          <p className="mb-8 sm:mb-10 text-base sm:text-lg text-blue-100 max-w-2xl mx-auto px-4">
+            Join thousands of readers exploring articles on technology, design, business, and more. Discover insights from industry experts and passionate writers.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <Link
@@ -60,8 +67,8 @@ export default function HeroSection({ stats }) {
             {stats.map((stat) => (
               <div key={stat.label} className="rounded-lg bg-white/10 backdrop-blur-sm p-4 sm:p-6">
                 <div className="mb-2 text-white">{stat.icon}</div>
-                <div className="text-2xl sm:text-3xl font-bold">{stat.value}</div>
-                <div className="text-xs sm:text-sm text-blue-200">{stat.label}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-white">{stat.value}</div>
+                <div className="text-xs sm:text-sm text-blue-100">{stat.label}</div>
               </div>
             ))}
           </div>

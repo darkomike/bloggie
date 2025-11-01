@@ -49,9 +49,17 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="shrink-0">
-            <Link href="/" className="inline-flex items-center gap-2 text-2xl font-extrabold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400 hover:opacity-80 transition-opacity">
-              <span className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white text-sm font-bold">B</span>
-              Bloggie
+            <Link href="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <Image
+                src="/assets/images/logo.jpg"
+                alt="Bloggie Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-lg object-cover"
+              />
+              <span className="hidden sm:inline text-xl font-extrabold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
+                Bloggie
+              </span>
             </Link>
           </div>
 

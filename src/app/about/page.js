@@ -1,4 +1,8 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import { blogService } from '@/lib/firebase/blog-service';
+import { viewService } from '@/lib/firebase/view-service';
+import CTASection from '@/components/CTASection';
 
 export const metadata = {
   title: 'About Us - Bloggie',
@@ -12,12 +16,52 @@ const team = [
   { name: 'David Kim', role: 'Design Director', avatar: 'DK', bio: 'Creative director with 10+ years experience' },
 ];
 
-const stats = [
-  { label: 'Articles Published', value: '500+' },
-  { label: 'Active Readers', value: '50K+' },
-  { label: 'Expert Authors', value: '25+' },
-  { label: 'Years of Experience', value: '5+' },
-];
+async function getStats() {
+  try {
+    // Get all posts
+    const posts = await blogService.getAllPosts();
+    const totalPosts = posts.length;
+
+    // Get unique authors
+    const authorsSet = new Set(posts.map(post => post.author?.uid).filter(Boolean));
+    const totalAuthors = authorsSet.size;
+
+    // Get unique categories
+    const categoriesSet = new Set(posts.map(post => post.category).filter(Boolean));
+    const totalCategories = categoriesSet.size;
+
+    // Get total views from view service
+    let totalViews = 0;
+    try {
+      const allViews = await viewService.getAllViews();
+      totalViews = Array.isArray(allViews) ? allViews.length : 0;
+      console.log('📊 Total Views from database:', totalViews);
+    } catch (e) {
+      console.log('View service error:', e.message);
+    }
+
+  // Format active readers (convert totalViews to thousands => K, minimum 5K)
+  // Divide by 1000 because we want to display the number in 'K'
+  const activeReaders = totalViews > 0 ? Math.max(Math.floor(totalViews / 1000), 5) : 50;
+  console.log('🔢 Active Readers (K):', activeReaders);
+
+    return [
+      { label: 'Articles Published', value: totalPosts.toString() },
+      { label: 'Active Readers', value: `${activeReaders}K+` },
+      { label: 'Expert Authors', value: totalAuthors.toString() },
+      { label: 'Categories', value: totalCategories.toString() },
+    ];
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    // Return default stats if there's an error
+    return [
+      { label: 'Articles Published', value: '500+' },
+      { label: 'Active Readers', value: '50K+' },
+      { label: 'Expert Authors', value: '25+' },
+      { label: 'Categories', value: '10+' },
+    ];
+  }
+}
 
 function HeroSection() {
   return (
@@ -80,14 +124,20 @@ function MissionSection() {
           </div>
         </div>
         <div className="relative">
-          <div className="aspect-square rounded-2xl bg-linear-to-br from-blue-400 to-purple-500 dark:from-blue-600 dark:to-purple-700 shadow-2xl transform hover:scale-105 transition-transform duration-300"></div>
+          <Image
+            src="/assets/images/about-2.jpg"
+            alt="Our mission at Bloggie"
+            width={500}
+            height={500}
+            className="w-full rounded-2xl shadow-2xl object-cover"
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function StatsSection() {
+function StatsSection({ stats }) {
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 py-12 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -215,49 +265,14 @@ function ValuesSection() {
   );
 }
 
-function CTASection() {
-  return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-800 dark:via-indigo-900 dark:to-purple-900 px-6 py-12 sm:px-12 sm:py-16 md:px-16 md:py-20">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-            backgroundSize: '40px 40px'
-          }} />
-        </div>
-        <div className="relative z-10 text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3">
-            Join Our Community
-          </h2>
-          <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-            Subscribe to our newsletter and be the first to know about new insights, exclusive content, and opportunities to grow with us.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-lg bg-white text-blue-600 font-semibold hover:bg-gray-50 transition-colors text-sm sm:text-base"
-            >
-              Get Started Today
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-700 transition-colors text-sm sm:text-base"
-            >
-              Contact Us
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function AboutPage() {
+export default async function AboutPage() {
+  const stats = await getStats();
+  
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <HeroSection />
       <MissionSection />
-      <StatsSection />
+      <StatsSection stats={stats} />
       <TeamSection />
       <ValuesSection />
       <CTASection />

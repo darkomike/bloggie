@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 const ContactInfo = () => (
   <div>
@@ -206,9 +207,17 @@ const ContactForm = () => {
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-12 sm:py-16 md:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Header with Background Image */}
+      <div className="relative py-12 sm:py-16 md:py-20 overflow-hidden">
+        <Image
+          src="/assets/images/contact.jpg"
+          alt="Contact us background"
+          fill
+          className="absolute inset-0 object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/40 dark:bg-black/50"></div>
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-3 sm:mb-4">
               Get in Touch

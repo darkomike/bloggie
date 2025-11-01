@@ -20,12 +20,28 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Bloggie - Professional Blog Platform",
   description: "A professional blog platform for sharing insights, stories, and knowledge with the world.",
+  icons: {
+    icon: [
+      {
+        url: "/favicon.ico",
+        sizes: "any",
+      },
+      {
+        url: "/assets/images/logo.jpg",
+        sizes: "any",
+        type: "image/jpeg",
+      },
+    ],
+    apple: "/assets/images/logo.jpg",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/assets/images/logo.jpg" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
