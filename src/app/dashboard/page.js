@@ -627,7 +627,7 @@ export default function DashboardPage() {
                             {post.category}
                           </span>
                           <span className="text-xs text-gray-500 dark:text-gray-400">
-                            by {post.authorName || 'Unknown'}
+                            by {post.author.name || 'Unknown'}
                           </span>
                         </div>
                       </div>
