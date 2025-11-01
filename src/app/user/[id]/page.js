@@ -5,7 +5,9 @@ import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { followService } from '@/lib/firebase/follow-service';
+import { blogService } from '@/lib/firebase/blog-service';
 import FollowButton from '@/components/FollowButton';
+import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -14,6 +16,8 @@ export default function UserProfilePage() {
   const username = params.id; // This is actually the username now
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [userPosts, setUserPosts] = useState([]);
   const [followStats, setFollowStats] = useState({
     followers: 0,
     following: 0,
@@ -30,15 +34,19 @@ export default function UserProfilePage() {
         if (user) {
           setUserData(user);
 
-          // Fetch follow stats using the uid
-          const [followerCount, followingCount] = await Promise.all([
+          // Fetch follow stats and posts using the uid
+          setPostsLoading(true);
+          const [followerCount, followingCount, authorPosts] = await Promise.all([
             followService.getFollowerCount(user.uid),
             followService.getFollowingCount(user.uid),
+            blogService.getPublishedPostsByAuthor(user.uid),
           ]);
           setFollowStats({
             followers: followerCount,
             following: followingCount,
           });
+          setUserPosts(authorPosts || []);
+          setPostsLoading(false);
         } else {
           setUserData(null);
         }
@@ -210,6 +218,24 @@ export default function UserProfilePage() {
                   </a>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Blog Posts Section */}
+          {userPosts && userPosts.length > 0 && (
+            <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                Articles by {userData.displayName || userData.username}
+              </h2>
+              {postsLoading ? (
+                <p className="text-gray-600 dark:text-gray-400">Loading posts...</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {userPosts.map((post) => (
+                    <BlogCard key={post.id} post={post} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

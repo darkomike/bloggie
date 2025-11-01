@@ -5,6 +5,8 @@ import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 import { uploadBlogCover, deleteBlob } from '@/lib/vercel-blob-service';
 import { TimeUtil } from '@/utils/timeUtils';
 import ReactMarkdown from 'react-markdown';
@@ -15,6 +17,7 @@ export default function EditBlogPage() {
   const router = useRouter();
   const params = useParams();
   const postId = params?.id;
+  const [userUsername, setUserUsername] = useState('');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -98,6 +101,22 @@ export default function EditBlogPage() {
     };
     fetchPost();
   }, [user, postId]);
+
+  // Fetch user's username from Firestore
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (!user?.uid) return;
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setUserUsername(userDoc.data().username || '');
+        }
+      } catch (err) {
+        console.error('Error fetching username:', err);
+      }
+    };
+    fetchUsername();
+  }, [user?.uid]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

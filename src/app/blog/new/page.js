@@ -2,9 +2,11 @@
 'use client';
 
 import { useAuth } from '@/components/AuthProvider';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 import { blogService } from '@/lib/firebase/blog-service';
 import { uploadBlogCover } from '@/lib/vercel-blob-service';
 import { TimeUtil } from '@/utils/timeUtils';
@@ -14,6 +16,7 @@ import { previewMarkdownComponents, remarkPlugins } from '@/lib/markdown/markdow
 export default function NewBlogPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const [userUsername, setUserUsername] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -29,6 +32,22 @@ export default function NewBlogPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+
+  // Fetch user's username from Firestore
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (!user?.uid) return;
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setUserUsername(userDoc.data().username || '');
+        }
+      } catch (err) {
+        console.error('Error fetching username:', err);
+      }
+    };
+    fetchUsername();
+  }, [user?.uid]);
 
   const categories = [
     'Technology',
@@ -128,6 +147,7 @@ export default function NewBlogPage() {
           name: user.displayName || '',
           email: user.email || '',
           avatar: user.photoURL || '',
+          username: userUsername || '',
         },
       };
       await blogService.createPost(blogPost);

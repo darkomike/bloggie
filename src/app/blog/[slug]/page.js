@@ -772,7 +772,10 @@ export default function BlogPostPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 pb-6 sm:pb-8 mb-8 sm:mb-10 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between gap-3 sm:gap-4 flex-1">
-              <div className="flex items-center gap-3 sm:gap-4 flex-1">
+              <Link
+                href={post.author?.username ? `/user/${post.author.username}` : '#'}
+                className="flex items-center gap-3 sm:gap-4 flex-1 hover:opacity-75 transition-opacity"
+              >
                 <div className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center ring-2 ring-blue-100 dark:ring-blue-900 shrink-0">
                   {post.author?.avatar ? (
                     <Image
@@ -790,12 +793,12 @@ export default function BlogPostPage() {
                   )}
                 </div>
                 <div>
-                  <p className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white">
+                  <p className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
                     {post.author?.name || 'Anonymous'}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Author</p>
                 </div>
-              </div>
+              </Link>
               {user && user.uid !== post.author?.uid && (
                 <div className="shrink-0">
                   <FollowButton

@@ -50,7 +50,10 @@ export default function BlogCard({ post }) {
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 sm:pt-4 md:pt-5">
           {/* Author */}
-          <div className="flex items-center gap-2 min-w-0">
+          <Link
+            href={post.author?.username ? `/user/${post.author.username}` : '#'}
+            className="flex items-center gap-2 min-w-0 hover:opacity-75 transition-opacity"
+          >
             {post.author?.avatar && (
               <div className="relative h-7 w-7 sm:h-8 sm:w-8 shrink-0 overflow-hidden rounded-full">
                 <Image
@@ -61,10 +64,10 @@ export default function BlogCard({ post }) {
                 />
               </div>
             )}
-            <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
+            <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400">
               {post.author?.name}
             </span>
-          </div>
+          </Link>
 
           {/* Reading Time */}
           {post.readingTime && (
