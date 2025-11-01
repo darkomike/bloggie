@@ -35,15 +35,13 @@ async function getStats() {
     try {
       const allViews = await viewService.getAllViews();
       totalViews = Array.isArray(allViews) ? allViews.length : 0;
-      console.log('📊 Total Views from database:', totalViews);
     } catch (e) {
-      console.log('View service error:', e.message);
+      // Silent fail - use default stats
     }
 
   // Format active readers (convert totalViews to thousands => K, minimum 5K)
   // Divide by 1000 because we want to display the number in 'K'
   const activeReaders = totalViews > 0 ? Math.max(Math.floor(totalViews / 1000), 5) : 50;
-  console.log('🔢 Active Readers (K):', activeReaders);
 
     return [
       { label: 'Articles Published', value: totalPosts.toString() },

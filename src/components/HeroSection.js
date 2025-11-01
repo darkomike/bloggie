@@ -3,7 +3,6 @@
 import { useAuth } from '@/components/AuthProvider';
 import Link from 'next/link';
 import PropTypes from 'prop-types';
-import Image from 'next/image';
 
 export default function HeroSection({ stats }) {
   const { user } = useAuth();
@@ -11,14 +10,14 @@ export default function HeroSection({ stats }) {
   return (
     <div className="relative overflow-hidden">
       {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/assets/images/home.jpg"
-          alt="Bloggie - Your blogging platform"
-          fill
-          className="object-cover"
-          priority
-        />
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: 'url(/assets/images/home.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/50 dark:bg-black/60"></div>
       </div>

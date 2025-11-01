@@ -1,6 +1,53 @@
 import { put, del } from '@vercel/blob';
 
 /**
+ * Compress an image file before upload
+ * @param {File} file - The image file to compress
+ * @param {number} quality - Quality level (0-1), default 0.8
+ * @returns {Promise<File>} - Compressed image file
+ */
+async function compressImage(file, quality = 0.8) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        
+        // Scale down if image is too large
+        const maxWidth = 2000;
+        const maxHeight = 2000;
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(
+          (blob) => {
+            const compressedFile = new File([blob], file.name, { 
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            });
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+    };
+  });
+}
+
+/**
  * Upload a file to Vercel Blob via API route
  * @param {File} file - The file to upload
  * @param {string} path - The path in blob storage (e.g., 'blog-covers/image.jpg')
@@ -12,8 +59,39 @@ export async function uploadBlob(file, path) {
       throw new Error('No file provided');
     }
 
+    let fileToUpload = file;
+    
+    // Max file size: 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    
+    // Compress image if it's an image file
+    if (file.type.startsWith('image/')) {
+      if (file.size > MAX_FILE_SIZE) {
+        console.log(`📦 Image ${file.name} is ${(file.size / 1024 / 1024).toFixed(2)}MB - compressing to <5MB...`);
+        fileToUpload = await compressImage(file, 0.6);
+        
+        // If still too large, compress more aggressively
+        if (fileToUpload.size > MAX_FILE_SIZE) {
+          console.log(`📦 Still large (${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB) - compressing further...`);
+          fileToUpload = await compressImage(fileToUpload, 0.4);
+        }
+        
+        console.log(`✅ Compressed to ${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB`);
+      } else if (file.size > 1024 * 1024) {
+        // Compress if over 1MB even if under max (for bandwidth optimization)
+        console.log(`📦 Optimizing image ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)...`);
+        fileToUpload = await compressImage(file, 0.75);
+        console.log(`✅ Optimized to ${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB`);
+      }
+    }
+    
+    // Final check - reject if still over 5MB
+    if (fileToUpload.size > MAX_FILE_SIZE) {
+      throw new Error(`File is too large (${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB). Maximum allowed size is 5MB.`);
+    }
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', fileToUpload);
     formData.append('path', path);
 
     const response = await fetch('/api/upload', {
@@ -23,6 +101,9 @@ export async function uploadBlob(file, path) {
 
     if (!response.ok) {
       const error = await response.json();
+      if (response.status === 413) {
+        throw new Error(`File too large: ${error.error}. Please use a smaller image.`);
+      }
       throw new Error(error.error || 'Upload failed');
     }
 
@@ -36,7 +117,7 @@ export async function uploadBlob(file, path) {
 
 /**
  * Delete a file from Vercel Blob via API route
- * @param {string} url - The URL of the file to delete
+ * @param {string} url - The URL of the file to delete (full URL)
  */
 export async function deleteBlob(url) {
   try {
@@ -44,18 +125,12 @@ export async function deleteBlob(url) {
       throw new Error('No URL provided');
     }
 
-    // Extract the blob key from the URL
-    // URL format: https://xxxxx.public.blob.vercel-storage.com/path/to/file
-    // We need just the path part: path/to/file
-    const urlObj = new URL(url);
-    const blobKey = urlObj.pathname.substring(1); // Remove leading slash
-
     const response = await fetch('/api/upload', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ url: blobKey }),
+      body: JSON.stringify({ url }),
     });
 
     if (!response.ok) {

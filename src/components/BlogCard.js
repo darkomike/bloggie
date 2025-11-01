@@ -4,19 +4,21 @@ import { format } from 'date-fns';
 
 export default function BlogCard({ post }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-lg sm:rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 transition-all duration-300 hover:border-blue-300 dark:hover:border-blue-600">
+    <article className="group h-full flex flex-col overflow-hidden rounded-lg sm:rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 transition-all duration-300 hover:border-blue-300 dark:hover:border-blue-600">
       {/* Cover Image */}
-      {post.coverImage && (
-        <div className="relative h-40 sm:h-48 md:h-52 w-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+      <div className="relative h-40 sm:h-48 md:h-52 w-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+        {post.coverImage ? (
           <Image
             src={post.coverImage}
             alt={post.title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
-        </div>
-      )}
+        ) : (
+          <div className="w-full h-full bg-linear-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700"></div>
+        )}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
+      </div>
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-4 sm:p-5 md:p-6">

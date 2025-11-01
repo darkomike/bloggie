@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { blogService } from '@/lib/firebase/blog-service';
 import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
@@ -15,7 +16,6 @@ export default function BlogPage() {
       try {
         // Use blog service to fetch published posts
         const postsData = await blogService.getAllPosts();
-        console.log('📝 [BlogPage] Received posts:', postsData);
         setPosts(postsData);
       } catch (err) {
         console.error('Error fetching posts:', err);
@@ -28,7 +28,8 @@ export default function BlogPage() {
     fetchPosts();
   }, []);
 
-  const categories = ['All', 'Technology', 'Design', 'Business', 'Lifestyle'];
+  // Get unique categories from posts that have at least one article
+  const categories = ['All', ...Array.from(new Set(posts.map(post => post.category).filter(Boolean))).sort()];
   const featuredPost = posts[0];
 
   if (loading) {
@@ -172,10 +173,15 @@ export default function BlogPage() {
               Featured Article
             </h2>
             <Link href={`/blog/${featuredPost.slug}`}>
-              <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-linear-to-br from-blue-600 to-indigo-600 shadow-lg sm:shadow-2xl hover:shadow-xl transition-shadow duration-300">
-                <div className="aspect-video sm:aspect-21/9 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                <div className="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 lg:p-12">
+              <div 
+                className="group overflow-hidden rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl hover:shadow-xl transition-shadow duration-300"
+                style={{
+                  backgroundImage: featuredPost.coverImage ? `url(${featuredPost.coverImage})` : 'linear-gradient(to right, rgb(37, 99, 235), rgb(79, 70, 229))',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <div className="relative w-full aspect-video sm:aspect-21/9 flex flex-col justify-end bg-linear-to-t from-gray-900 via-gray-900/40 to-transparent p-4 sm:p-6 md:p-8 lg:p-12">
                   <div className="mb-3 sm:mb-4 md:mb-5">
                     <div className="flex flex-wrap gap-2">
                       {featuredPost.category && (
@@ -218,9 +224,7 @@ export default function BlogPage() {
           {posts.length > 0 ? (
             <div className="grid gap-6 sm:gap-7 md:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:gap-10">
               {posts.map((post) => (
-                <div key={post.id} className="h-full">
-                  <BlogCard post={post} />
-                </div>
+                <BlogCard key={post.id} post={post} />
               ))}
             </div>
           ) : (
