@@ -103,7 +103,7 @@ export const blogService = {
 
   // Get posts by category
   async getPostsByCategory(category, limitCount) {
-  return await this.getPostsByField('category', category, limitCount);
+    return await this.getPostsByField('category', category, limitCount);
   },
 
   // Get posts by tag

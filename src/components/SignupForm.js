@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from './AuthProvider';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function SignupForm() {
   const [name, setName] = useState('');
@@ -14,6 +14,10 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Get redirect URL from query params, default to dashboard
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,7 +37,10 @@ export default function SignupForm() {
 
     try {
       await signUp(email, password, name);
-      router.push('/');
+      // Debug log for redirect
+      console.log('Redirect after signup:', redirectUrl);
+      // Redirect to the original page or dashboard
+      router.push(redirectUrl);
     } catch (err) {
     console.error('Sign up error:', err);
       setError('Failed to create account. Please try again.');

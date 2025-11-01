@@ -21,15 +21,16 @@ export default function BlogCard({ post }) {
       {/* Content */}
       <div className="flex flex-1 flex-col p-4 sm:p-5 md:p-6">
         {/* Category and Date */}
-        <div className="mb-2 sm:mb-3 md:mb-4 flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-          <Link
-            href={`/category/${post.category}`}
-            className="inline-block px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
-          >
-            {post.category}
-          </Link>
-          <span className="hidden sm:inline">•</span>
-          <time dateTime={post.publishedAt?.toISOString()} className="text-xs sm:text-sm">
+        <div className="mb-2 sm:mb-3 md:mb-4 flex flex-col gap-2 sm:gap-3">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center">
+            <Link
+              href={`/category/${post.category?.toLowerCase()}`}
+              className="inline-block px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-xs sm:text-sm whitespace-nowrap"
+            >
+              {post.category}
+            </Link>
+          </div>
+          <time dateTime={post.publishedAt?.toISOString()} className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             {format(post.publishedAt || new Date(), 'MMM d, yyyy')}
           </time>
         </div>
@@ -65,7 +66,12 @@ export default function BlogCard({ post }) {
 
           {/* Reading Time */}
           {post.readingTime && (
-            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">⏱️ {post.readingTime} min</span>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2 flex items-center">
+              <svg className="h-3 w-3 sm:h-4 sm:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {post.readingTime} min
+            </span>
           )}
         </div>
       </div>

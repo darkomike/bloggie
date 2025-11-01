@@ -27,30 +27,74 @@ import {
 
 // PostPerformanceChart Component
 function PostPerformanceChart({ recentPosts, viewCounts }) {
+  // keep full title in name and rely on custom tick renderer to display it nicely
   const chartData = recentPosts.map(post => ({
-    name: post.title.length > 15 ? post.title.substring(0, 12) + '...' : post.title,
+    name: post.title || 'Untitled',
     views: viewCounts[post.id] || 0,
   }));
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-8">
       <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-        <span className="mr-3">📊</span>
+        <svg className="h-5 w-5 mr-3 text-gray-500 dark:text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12h3v7H3z" />
+          <path d="M10 5h3v14h-3z" />
+          <path d="M17 9h3v10h-3z" />
+        </svg>
         Post Performance
       </h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.2)" />
-          <XAxis dataKey="name" stroke="currentColor" className="text-xs sm:text-sm text-gray-600 dark:text-gray-400" />
-          <YAxis stroke="currentColor" className="text-xs sm:text-sm text-gray-600 dark:text-gray-400" />
+      <ResponsiveContainer width="100%" height={340}>
+        <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 70 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.06)" />
+          <XAxis dataKey="name" interval={0} tick={<CustomizedTick />} height={70} />
+          <YAxis />
           <Tooltip 
-            contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+            contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '8px', color: '#fff' }}
             labelStyle={{ color: '#fff' }}
+            formatter={(value) => [`${value}`, 'Views']}
           />
-          <Bar dataKey="views" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="views" fill="#3b82f6" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
+  );
+}
+
+// Customized tick renderer to show multi-line titles and tooltip fallback
+function CustomizedTick(props) {
+  const { x, y, payload } = props;
+  const title = payload.value || '';
+
+  // split title into chunks of ~16 chars, prefer breaking on spaces
+  const maxLen = 16;
+  const words = title.split(' ');
+  const lines = [];
+  let current = '';
+  words.forEach((w) => {
+    if ((current + ' ' + w).trim().length <= maxLen) {
+      current = (current + ' ' + w).trim();
+    } else {
+      if (current) lines.push(current);
+      current = w;
+    }
+  });
+  if (current) lines.push(current);
+
+  // Limit lines to 3
+  const displayLines = lines.slice(0, 3);
+
+  return (
+    <g transform={`translate(${x}, ${y})`}>
+      <foreignObject x={-70} y={8} width={140} height={72}>
+        <div className="text-xs text-center text-gray-600 dark:text-gray-400 leading-tight" title={title} style={{ fontSize: 12 }}>
+          {displayLines.map((ln, idx) => (
+            <div key={idx} style={{ lineHeight: '1.05em', maxHeight: '3.15em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal' }}>
+              {ln}
+            </div>
+          ))}
+        </div>
+      </foreignObject>
+    </g>
   );
 }
 
@@ -67,45 +111,37 @@ function EngagementChart({ stats }) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
       <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-        <span className="mr-3">💬</span>
+        <svg className="h-5 w-5 mr-3 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+        </svg>
         Engagement Breakdown
       </h3>
-      <div className="grid gap-8 md:gap-0">
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={engagementData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, value }) => `${name}: ${value}`}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {engagementData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip 
-              contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="md:ml-8 space-y-3 sm:space-y-4 flex flex-col justify-center">
-          {engagementData.map((item) => (
-            <div key={item.name} className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="h-3 w-3 sm:h-4 sm:w-4 rounded-full mr-3" style={{ backgroundColor: item.color }}></div>
-                <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">{item.name}</span>
-              </div>
-              <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-                {item.value} <span className="text-xs text-gray-500">({totalEngagement > 0 ? Math.round((item.value / totalEngagement) * 100) : 0}%)</span>
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={engagementData}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="value"
+          >
+            {engagementData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+          />
+          <Legend 
+            verticalAlign="bottom" 
+            height={36}
+            formatter={(value, entry) => `${entry.payload.name}: ${entry.payload.value}`}
+            wrapperStyle={{ paddingTop: '20px' }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -114,7 +150,10 @@ function EngagementChart({ stats }) {
 function CategoryDistributionChart({ recentPosts }) {
   const categoryData = {};
   recentPosts.forEach(post => {
-    categoryData[post.category] = (categoryData[post.category] || 0) + 1;
+    const category = post.category;
+    if (category) {
+      categoryData[category] = (categoryData[category] || 0) + 1;
+    }
   });
 
   const chartData = Object.entries(categoryData).map(([category, count]) => ({
@@ -135,17 +174,18 @@ function CategoryDistributionChart({ recentPosts }) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
       <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-        <span className="mr-3">🏷️</span>
+        <svg className="h-5 w-5 mr-3 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
         Posts by Category
       </h3>
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
             data={chartData}
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={({ name, count }) => `${name} (${count})`}
             outerRadius={80}
             fill="#8884d8"
             dataKey="count"
@@ -156,6 +196,11 @@ function CategoryDistributionChart({ recentPosts }) {
           </Pie>
           <Tooltip 
             contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+          />
+          <Legend 
+            verticalAlign="bottom" 
+            height={36}
+            wrapperStyle={{ paddingTop: '20px' }}
           />
         </PieChart>
       </ResponsiveContainer>
@@ -259,8 +304,10 @@ function RecentPostsTableContent({ recentPosts, viewCounts }) {
               <td className="px-4 sm:px-6 py-4">
                 <div className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">{post.title}</div>
               </td>
-              <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">{post.category}</span>
+              <td className="hidden sm:table-cell px-6 py-4">
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                  {post.category}
+                </span>
               </td>
               <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                 {viewCounts?.[post.id] !== undefined ? viewCounts[post.id] : 0}
@@ -499,7 +546,9 @@ export default function DashboardPage() {
         {/* Charts Section */}
         <div className="mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <span className="mr-3">📈</span>
+            <svg className="h-7 w-7 mr-3 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6m16-6l-2-2m2 2v6m-8-10l2 2" />
+            </svg>
             Analytics
           </h2>
           

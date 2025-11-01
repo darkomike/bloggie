@@ -150,11 +150,8 @@ const ReadingProgressBar = () => {
 
 // Table of Contents Component
 const TableOfContents = ({ content }) => {
-  const [activeId, setActiveId] = useState('');
-
   const headings = useMemo(() => {
     // Only match lines that start with # (markdown headings)
-    // NOT list items like "1. **Healthcare**" or "- item"
     const headingRegex = /^#{1,6}\s+(.+)$/gm;
     const extractedHeadings = [];
     let match;
@@ -165,6 +162,7 @@ const TableOfContents = ({ content }) => {
       const text = match[1].trim();
       
       // Create ID from text by removing markdown formatting and special chars
+      // MUST match the logic in CustomHeading component
       const cleanText = text
         .replace(/\*\*(.+?)\*\*/g, '$1') // Remove bold **
         .replace(/\*(.+?)\*/g, '$1')     // Remove italic *
@@ -174,83 +172,121 @@ const TableOfContents = ({ content }) => {
       
       const id = cleanText
         .toLowerCase()
-        .replaceAll(/[^a-z0-9]+/g, '-')
-        .replaceAll(/(?:^-)|(?:-$)/g, '');
+        .replace(/[^a-z0-9\s-]/g, '')  // Keep only alphanumeric, spaces, and hyphens
+        .replace(/\s+/g, '-')            // Replace spaces with hyphens
+        .replace(/-+/g, '-')             // Replace multiple hyphens with single
+        .replace(/^-|-$/g, '');          // Remove leading/trailing hyphens
 
-      extractedHeadings.push({ level, text: cleanText, id });
+      extractedHeadings.push({ 
+        level, 
+        text: cleanText, 
+        id,
+        originalText: text // Keep original for debugging
+      });
     }
 
     return extractedHeadings;
   }, [content]);
 
+  // Initialize activeId to first heading ID
+  const [activeId, setActiveId] = useState(() => headings.length > 0 ? headings[0].id : null);
+
+  // Handle scroll detection
   useEffect(() => {
     const handleScroll = () => {
-      const headingElements = headings.map(h => document.getElementById(h.id)).filter(Boolean);
-      
-      for (let i = headingElements.length - 1; i >= 0; i--) {
-        const element = headingElements[i];
-        if (element && element.getBoundingClientRect().top <= 100) {
-          setActiveId(element.id);
-          break;
+      if (headings.length === 0) return;
+
+      // Find the heading closest to the top of the viewport
+      let closestHeading = headings[0];
+      let closestDistance = Infinity;
+
+      for (const heading of headings) {
+        const element = document.getElementById(heading.id);
+        if (!element) continue;
+
+        const rect = element.getBoundingClientRect();
+        const distance = Math.abs(rect.top - 150); // Offset for sticky header
+
+        if (rect.top <= 150 && distance < closestDistance) {
+          closestDistance = distance;
+          closestHeading = heading;
         }
+      }
+
+      // Only update if we found a valid element
+      const element = document.getElementById(closestHeading.id);
+      if (element) {
+        setActiveId(closestHeading.id);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Call once on mount to set initial active state
+    handleScroll();
+    
     return () => window.removeEventListener('scroll', handleScroll);
   }, [headings]);
 
   if (headings.length === 0) return null;
 
   return (
-    <div className="hidden 2xl:block fixed left-4 top-24 w-72 max-h-[calc(100vh-150px)] overflow-y-auto bg-linear-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 z-40">
-      <div className="flex items-center gap-2 mb-4">
-        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="bg-linear-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
-        <h4 className="font-bold text-lg text-gray-900 dark:text-white">Contents</h4>
+        <h4 className="font-bold text-sm md:text-base text-gray-900 dark:text-white">On this page</h4>
       </div>
       <nav>
-        <ul className="space-y-2">
+        <ul className="space-y-1.5 text-xs md:text-sm max-h-96 overflow-y-auto">
           {headings.map((heading) => {
             const isH2 = heading.level === 2;
             const isH3 = heading.level === 3;
-            const marginStyle = isH2 ? 0 : isH3 ? 16 : (heading.level - 1) * 12;
+            const isH4 = heading.level === 4;
+            
+            // Calculate indent based on heading level
+            let paddingLeft = 'pl-0';
+            if (isH3) paddingLeft = 'pl-3';
+            else if (isH4) paddingLeft = 'pl-6';
+            else if (heading.level > 4) paddingLeft = 'pl-9';
+            
             const isActive = activeId === heading.id;
-            const activeClass = isActive
-              ? isH2 
-                ? 'text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border-l-blue-600 dark:border-l-blue-400'
-                : 'text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border-l-blue-600 dark:border-l-blue-400'
-              : `text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 border-l-transparent hover:border-l-blue-400 dark:hover:border-l-blue-500 ${isH2 ? 'hover:bg-gray-100 dark:hover:bg-gray-700/50' : ''}`;
             
             return (
               <li 
                 key={heading.id}
-                style={{ marginLeft: `${marginStyle}px` }}
-                className="group"
+                className={`${paddingLeft} transition-all duration-150`}
               >
                 <a
                   href={`#${heading.id}`}
-                  className={`block text-sm py-2 px-3 rounded-lg transition-all duration-200 border-l-2 ${activeClass}`}
+                  className={`block py-1.5 px-2 rounded transition-all duration-200 line-clamp-2 ${
+                    isActive
+                      ? 'text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 font-medium'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                  }`}
                   onClick={(e) => {
                     e.preventDefault();
-                    document.getElementById(heading.id)?.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center'
-                    });
+                    const element = document.getElementById(heading.id);
+                    if (element) {
+                      element.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                      // Manually set active after clicking
+                      setActiveId(heading.id);
+                    }
                   }}
+                  title={heading.text}
                 >
-                  <span className={isH2 ? 'font-semibold' : 'font-normal'}>{heading.text}</span>
+                  {heading.text}
                 </a>
               </li>
             );
           })}
         </ul>
       </nav>
-      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {headings.length} {headings.length === 1 ? 'section' : 'sections'}
-        </p>
+      <div className="pt-2 text-xs text-gray-500 dark:text-gray-500 border-t border-gray-200 dark:border-gray-700">
+        {headings.length} {headings.length === 1 ? 'section' : 'sections'}
       </div>
     </div>
   );
@@ -465,11 +501,32 @@ export default function BlogPostPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleEnhancedShare = () => {
+  const handleEnhancedShare = async () => {
     const origin = globalThis.window === undefined ? '' : globalThis.location.origin;
     const link = `${origin}/blog/${post.slug}`;
     setShareLink(link);
     setShowShareModal(true);
+    
+    // Record the share
+    if (post?.id) {
+      try {
+        await shareService.addShare({
+          postId: post.id,
+          userId: user?.uid || null,
+          sharedAt: new Date().toISOString(),
+        });
+        
+        // Update share count
+        const sharesData = await shareService.getSharesByPost(post.id);
+        setSharesCount(sharesData.length);
+        setPost((prevPost) => ({
+          ...prevPost,
+          sharesCount: sharesData.length,
+        }));
+      } catch (error) {
+        console.error('Error recording share:', error);
+      }
+    }
   };
 
   const [post, setPost] = useState(null);
@@ -632,7 +689,6 @@ export default function BlogPostPage() {
   return (
     <>
       <ReadingProgressBar />
-      {post?.content && <TableOfContents content={post.content} />}
       
       <FloatingActions
         userLiked={userLiked}
@@ -657,11 +713,17 @@ export default function BlogPostPage() {
             <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 lg:p-12">
               <div className="text-white">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 sm:mb-4 md:mb-6">
-                  <span className="px-2.5 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-blue-600 hover:bg-blue-700 rounded-full text-xs sm:text-sm md:text-base font-bold transition-colors">
-                    ✨ {post.category}
+                  <span className="px-2.5 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-blue-600 hover:bg-blue-700 rounded-full text-xs sm:text-sm md:text-base font-bold transition-colors flex items-center whitespace-nowrap">
+                    <svg className="h-3 w-3 sm:h-4 sm:w-4 mr-1 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M9.195 18.44c1.25.713 2.805-.19 2.805-1.629v-5.087a1 1 0 00-1-1H10a1 1 0 00-1 1v5.087c0 1.439 1.555 2.342 2.805 1.629z" />
+                      <path fillRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 100-16 8 8 0 000 16z" clipRule="evenodd" />
+                    </svg>
+                    {post.category}
                   </span>
                   <span className="text-xs sm:text-sm md:text-base opacity-90 flex items-center">
-                    <span className="mr-1">⏱️</span>
+                    <svg className="h-3 w-3 sm:h-4 sm:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     {calculateReadingTime(post.content)} min read
                   </span>
                 </div>
@@ -682,11 +744,17 @@ export default function BlogPostPage() {
           {!post.coverImage && (
             <div className="mb-8 sm:mb-10 md:mb-12">
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-5">
-                <span className="px-2.5 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-blue-600 text-white rounded-full text-xs sm:text-sm md:text-base font-bold">
-                  ✨ {post.category}
+                <span className="px-2.5 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-blue-600 text-white rounded-full text-xs sm:text-sm md:text-base font-bold flex items-center whitespace-nowrap">
+                  <svg className="h-3 w-3 sm:h-4 sm:w-4 mr-1 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9.195 18.44c1.25.713 2.805-.19 2.805-1.629v-5.087a1 1 0 00-1-1H10a1 1 0 00-1 1v5.087c0 1.439 1.555 2.342 2.805 1.629z" />
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 100-16 8 8 0 000 16z" clipRule="evenodd" />
+                  </svg>
+                  {post.category}
                 </span>
                 <span className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 flex items-center">
-                  <span className="mr-1">⏱️</span>
+                  <svg className="h-3 w-3 sm:h-4 sm:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   {calculateReadingTime(post.content)} min read
                 </span>
               </div>
@@ -751,36 +819,49 @@ export default function BlogPostPage() {
             </div>
           </div>
 
-          <div className="max-w-none">
-            <ReactMarkdown
-              remarkPlugins={remarkPlugins}
-              components={{
-                ...fullMarkdownComponents,
-                h1: ({ children }) => <CustomHeading level={1}>{children}</CustomHeading>,
-                h2: ({ children }) => <CustomHeading level={2}>{children}</CustomHeading>,
-                h3: ({ children }) => <CustomHeading level={3}>{children}</CustomHeading>,
-                h4: ({ children }) => <CustomHeading level={4}>{children}</CustomHeading>,
-                h5: ({ children }) => <CustomHeading level={5}>{children}</CustomHeading>,
-                h6: ({ children }) => <CustomHeading level={6}>{children}</CustomHeading>,
-              }}
-            >
-              {post.content}
-            </ReactMarkdown>
+          <div className="relative grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
+            {/* Main Content */}
+            <div className="lg:col-span-3">
+              <div className="max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={remarkPlugins}
+                  components={{
+                    ...fullMarkdownComponents,
+                    h1: ({ children }) => <CustomHeading level={1}>{children}</CustomHeading>,
+                    h2: ({ children }) => <CustomHeading level={2}>{children}</CustomHeading>,
+                    h3: ({ children }) => <CustomHeading level={3}>{children}</CustomHeading>,
+                    h4: ({ children }) => <CustomHeading level={4}>{children}</CustomHeading>,
+                    h5: ({ children }) => <CustomHeading level={5}>{children}</CustomHeading>,
+                    h6: ({ children }) => <CustomHeading level={6}>{children}</CustomHeading>,
+                  }}
+                >
+                  {post.content}
+                </ReactMarkdown>
+              </div>
+            </div>
+
+            {/* Table of Contents Sidebar */}
+            {post?.content && (
+              <div className="hidden lg:block lg:col-span-1">
+                <div className="sticky top-24">
+                  <TableOfContents content={post.content} />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-10 sm:mt-12 md:mt-16 pt-6 sm:pt-8 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-8 sm:mb-10">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button
-                  className={`flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${userLiked ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                  className={`flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${userLiked ? 'bg-red-600 text-white hover:bg-red-700 shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                   onClick={handleLike}
                   aria-label={userLiked ? 'Unlike this post' : 'Like this post'}
                 >
                   <svg className="h-4 w-4 sm:h-5 sm:w-5" fill={userLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
-                  <span className="hidden xs:inline">{likesCount || 0}</span>
-                  <span className="inline xs:hidden">❤️</span>
+                  <span className="text-xs hidden sm:inline">{likesCount || 0}</span>
                 </button>
                 <button
                   className="flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 font-semibold text-sm sm:text-base"
@@ -790,8 +871,7 @@ export default function BlogPostPage() {
                   <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
-                  <span className="hidden xs:inline">{sharesCount || 0}</span>
-                  <span className="inline xs:hidden">📤</span>
+                  <span className="text-xs hidden sm:inline">{sharesCount || 0}</span>
                 </button>
               </div>
 
@@ -815,8 +895,7 @@ export default function BlogPostPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     )}
                   </svg>
-                  <span className="hidden xs:inline">{user?.uid === post?.author?.uid ? 'Edit' : 'New'}</span>
-                  <span className="inline xs:hidden">✏️</span>
+                  <span>{user?.uid === post?.author?.uid ? 'Edit' : 'New'}</span>
                 </button>
               )}
             </div>
@@ -825,7 +904,7 @@ export default function BlogPostPage() {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
               <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-md">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">📤 Share this post</h4>
+                  <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Share this post</h4>
                   <button
                     onClick={() => setShowShareModal(false)}
                     className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"

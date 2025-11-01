@@ -5,8 +5,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { storage } from '@/lib/firebase/config';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadBlogCover, deleteBlob } from '@/lib/vercel-blob-service';
 import { TimeUtil } from '@/utils/timeUtils';
 import ReactMarkdown from 'react-markdown';
 import { previewMarkdownComponents, remarkPlugins } from '@/lib/markdown/markdownComponents';
@@ -45,6 +44,20 @@ export default function EditBlogPage() {
     'Health',
     'Education',
     'Entertainment',
+    'Marketing',
+    'Finance',
+    'Career',
+    'Productivity',
+    'Wellness',
+    'Art',
+    'Music',
+    'Sports',
+    'Personal Development',
+    'Entrepreneurship',
+    'Environment',
+    'Photography',
+    'Writing',
+    'Creativity',
   ];
 
   useEffect(() => {
@@ -63,6 +76,7 @@ export default function EditBlogPage() {
           setLoading(false);
           return;
         }
+        
         setFormData({
           title: post.title || '',
           slug: post.slug || '',
@@ -87,6 +101,7 @@ export default function EditBlogPage() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
@@ -96,8 +111,8 @@ export default function EditBlogPage() {
     if (name === 'title') {
       const slug = value
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
+        .replaceAll(/[^a-z0-9]+/g, '-')
+        .replaceAll(/^-|-$/g, '');
       setFormData(prev => ({ ...prev, slug }));
     }
   };
@@ -134,9 +149,15 @@ export default function EditBlogPage() {
       // Upload new cover image if changed
       if (coverImage) {
         setUploading(true);
-        const imageRef = ref(storage, `blog-covers/${Date.now()}-${coverImage.name}`);
-        await uploadBytes(imageRef, coverImage);
-        coverImageUrl = await getDownloadURL(imageRef);
+        // Delete old image if exists
+        if (coverImagePreview) {
+          try {
+            await deleteBlob(coverImagePreview);
+          } catch (err) {
+            console.warn('Could not delete old image:', err);
+          }
+        }
+        coverImageUrl = await uploadBlogCover(coverImage);
         setUploading(false);
       }
       // Update blog post using blogService
@@ -302,7 +323,6 @@ export default function EditBlogPage() {
               <select
                 id="category"
                 name="category"
-                required
                 value={formData.category}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"

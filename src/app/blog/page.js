@@ -143,7 +143,9 @@ export default function BlogPage() {
         {/* Category Filter */}
         <div className="mb-10 sm:mb-14 md:mb-16">
           <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center">
-            <span className="text-blue-600 dark:text-blue-400 mr-2">🏷️</span>
+            <svg className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
             Filter by Category
           </h3>
           <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
@@ -153,7 +155,7 @@ export default function BlogPage() {
                 href={category === 'All' ? '/blog' : `/category/${category.toLowerCase()}`}
                 className="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm md:text-base font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:shadow-md"
               >
-                {category === 'All' ? '🌐 All' : category}
+                {category === 'All' ? 'All Categories' : category}
               </Link>
             ))}
           </div>
@@ -162,8 +164,12 @@ export default function BlogPage() {
         {/* Featured Post */}
         {featuredPost && (
           <div className="mb-12 sm:mb-16 lg:mb-20">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8">
-              📌 Featured Article
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 flex items-center">
+              <svg className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9.195 18.44c1.25.713 2.805-.19 2.805-1.629v-5.087a1 1 0 00-1-1H10a1 1 0 00-1 1v5.087c0 1.439 1.555 2.342 2.805 1.629z" />
+                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 100-16 8 8 0 000 16z" clipRule="evenodd" />
+              </svg>
+              Featured Article
             </h2>
             <Link href={`/blog/${featuredPost.slug}`}>
               <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-linear-to-br from-blue-600 to-indigo-600 shadow-lg sm:shadow-2xl hover:shadow-xl transition-shadow duration-300">
@@ -171,9 +177,13 @@ export default function BlogPage() {
                 <div className="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 lg:p-12">
                   <div className="mb-3 sm:mb-4 md:mb-5">
-                    <span className="inline-block rounded-full bg-yellow-400 dark:bg-yellow-500 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold text-gray-900">
-                      ⭐ {featuredPost.category}
-                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {featuredPost.category && (
+                        <span className="inline-block rounded-full bg-yellow-400 dark:bg-yellow-500 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold text-gray-900">
+                          ★ {featuredPost.category}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-3 md:mb-4 group-hover:text-blue-200 transition-colors line-clamp-3 sm:line-clamp-2">
                     {featuredPost.title}
@@ -184,7 +194,12 @@ export default function BlogPage() {
                   <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-blue-100">
                     <span className="font-medium">{featuredPost.author?.name}</span>
                     <span className="hidden sm:inline">•</span>
-                    <span>⏱️ {featuredPost.readingTime} min read</span>
+                    <span className="flex items-center">
+                      <svg className="h-3 w-3 sm:h-4 sm:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {featuredPost.readingTime} min read
+                    </span>
                   </div>
                 </div>
               </div>
@@ -195,7 +210,9 @@ export default function BlogPage() {
         {/* All Posts Grid */}
         <div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8 sm:mb-12 flex items-center">
-            <span className="text-blue-600 dark:text-blue-400 mr-3">📚</span>
+            <svg className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 dark:text-blue-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747S17.5 6.253 12 6.253z" />
+            </svg>
             Latest Articles
           </h2>
           {posts.length > 0 ? (

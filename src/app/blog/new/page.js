@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { blogService } from '@/lib/firebase/blog-service';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadBlogCover } from '@/lib/vercel-blob-service';
 import { TimeUtil } from '@/utils/timeUtils';
 import ReactMarkdown from 'react-markdown';
 import { previewMarkdownComponents, remarkPlugins } from '@/lib/markdown/markdownComponents';
@@ -41,10 +41,25 @@ export default function NewBlogPage() {
     'Health',
     'Education',
     'Entertainment',
+    'Marketing',
+    'Finance',
+    'Career',
+    'Productivity',
+    'Wellness',
+    'Art',
+    'Music',
+    'Sports',
+    'Personal Development',
+    'Entrepreneurship',
+    'Environment',
+    'Photography',
+    'Writing',
+    'Creativity',
   ];
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
@@ -92,9 +107,7 @@ export default function NewBlogPage() {
       // Upload cover image if provided
       if (coverImage) {
         setUploading(true);
-        const imageRef = ref(storage, `blog-covers/${Date.now()}-${coverImage.name}`);
-        await uploadBytes(imageRef, coverImage);
-        coverImageUrl = await getDownloadURL(imageRef);
+        coverImageUrl = await uploadBlogCover(coverImage);
         setUploading(false);
       }
       // Create blog post using blogService
@@ -260,7 +273,6 @@ export default function NewBlogPage() {
               <select
                 id="category"
                 name="category"
-                required
                 value={formData.category}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"

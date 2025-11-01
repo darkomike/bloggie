@@ -48,9 +48,9 @@ async function getCategoryStats() {
     const posts = await blogService.getAllPosts();
     const categoryCounts = {};
     for (const post of posts) {
-      if (post.category) {
-        // Normalize category: lowercase and trim
-        const normalized = post.category.trim().toLowerCase();
+      const category = post.category;
+      if (category) {
+        const normalized = category.trim().toLowerCase();
         categoryCounts[normalized] = (categoryCounts[normalized] || 0) + 1;
         console.log(`Category: ${normalized}, Count: ${categoryCounts[normalized]}`); // Debug log
       }

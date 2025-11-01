@@ -2,10 +2,10 @@
 
 import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
-import { db, storage } from '@/lib/firebase/config';
+import { db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
+import { uploadUserAvatar, deleteBlob } from '@/lib/vercel-blob-service';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -67,9 +67,16 @@ export default function ProfilePage() {
 
     setUploading(true);
     try {
-      const storageRef = ref(storage, `avatars/${user.uid}`);
-      await uploadBytes(storageRef, file);
-      const photoURL = await getDownloadURL(storageRef);
+      // Delete old avatar if exists
+      if (user.photoURL) {
+        try {
+          await deleteBlob(user.photoURL);
+        } catch (err) {
+          console.warn('Could not delete old avatar:', err);
+        }
+      }
+
+      const photoURL = await uploadUserAvatar(file, user.uid);
 
       // Update Firebase Auth profile
       await updateProfile(user, { photoURL });

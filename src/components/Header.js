@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useAuth } from './AuthProvider';
+import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { user, signOut, loading } = useAuth();
+  const pathname = usePathname();
 
   const handleSignOut = async () => {
     try {
@@ -17,6 +19,21 @@ export default function Header() {
     } catch (error) {
       console.error('Sign out error:', error);
     }
+  };
+
+  // Create auth links with redirect parameter (don't redirect from auth pages themselves)
+  const getLoginLink = () => {
+    if (pathname === '/login' || pathname === '/signup') {
+      return '/login';
+    }
+    return `/login?redirect=${encodeURIComponent(pathname)}`;
+  };
+
+  const getSignupLink = () => {
+    if (pathname === '/login' || pathname === '/signup') {
+      return '/signup';
+    }
+    return `/signup?redirect=${encodeURIComponent(pathname)}`;
   };
 
   return (
@@ -110,13 +127,13 @@ export default function Header() {
                 ) : (
                   <div className="hidden md:flex md:items-center md:space-x-3">
                     <Link
-                      href="/login"
+                      href={getLoginLink()}
                       className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                     >
                       Sign in
                     </Link>
                     <Link
-                      href="/signup"
+                      href={getSignupLink()}
                       className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
                     >
                       Sign up
@@ -186,14 +203,14 @@ export default function Header() {
               {!loading && !user && (
                 <>
                   <Link
-                    href="/login"
+                    href={getLoginLink()}
                     className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Sign in
                   </Link>
                   <Link
-                    href="/signup"
+                    href={getSignupLink()}
                     className="block rounded-md bg-blue-600 px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
                     onClick={() => setMobileMenuOpen(false)}
                   >

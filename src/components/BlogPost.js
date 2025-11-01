@@ -9,8 +9,8 @@ export default function BlogPost({ post }) {
       {/* Header */}
       <header className="mb-8">
         {/* Category */}
-        <div className="mb-4">
-          <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+        <div className="mb-4 flex flex-wrap gap-2">
+          <span className="inline-block rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-sm font-medium text-blue-800 dark:text-blue-300 whitespace-nowrap">
             {post.category}
           </span>
         </div>
