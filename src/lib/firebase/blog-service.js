@@ -149,37 +149,41 @@ export const blogService = {
   // Get published posts by author only
   async getPublishedPostsByAuthor(authorUid) {
     if (!checkFirestore()) return [];
+    // Fetch all posts by author, then filter by published status to avoid composite index requirement
     const q = query(
       collection(db, POSTS_COLLECTION),
       where('author.uid', '==', authorUid),
-      where('published', '==', true),
       orderBy('createdAt', 'desc')
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => {
-      const post = PostModel.fromFirestore({ id: doc.id, ...doc.data() });
-      post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
-      post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
-      return post;
-    });
+    return querySnapshot.docs
+      .filter(doc => doc.data().published === true) // Filter published in client
+      .map((doc) => {
+        const post = PostModel.fromFirestore({ id: doc.id, ...doc.data() });
+        post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
+        post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
+        return post;
+      });
   },
 
   // Get published posts by author email
   async getPublishedPostsByAuthorEmail(email) {
     if (!checkFirestore()) return [];
+    // Fetch all posts by author, then filter by published status to avoid composite index requirement
     const q = query(
       collection(db, POSTS_COLLECTION),
       where('author.email', '==', email),
-      where('published', '==', true),
       orderBy('createdAt', 'desc')
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => {
-      const post = PostModel.fromFirestore({ id: doc.id, ...doc.data() });
-      post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
-      post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
-      return post;
-    });
+    return querySnapshot.docs
+      .filter(doc => doc.data().published === true) // Filter published in client
+      .map((doc) => {
+        const post = PostModel.fromFirestore({ id: doc.id, ...doc.data() });
+        post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
+        post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
+        return post;
+      });
   },
 
   // Create a new post
