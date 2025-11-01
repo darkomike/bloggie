@@ -2,8 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase/config';
-import { doc, getDoc } from 'firebase/firestore';
+import { userService } from '@/lib/firebase/user-service';
 import { followService } from '@/lib/firebase/follow-service';
 import { blogService } from '@/lib/firebase/blog-service';
 import FollowButton from '@/components/FollowButton';
@@ -28,12 +27,10 @@ export default function UserProfilePage() {
       if (!uid) return;
 
       try {
-        // Fetch user by UID from Firestore
-        const userRef = doc(db, 'users', uid);
-        const userSnap = await getDoc(userRef);
+        // Fetch user by UID using userService
+        const user = await userService.getUserById(uid);
         
-        if (userSnap.exists()) {
-          const user = { uid: userSnap.id, ...userSnap.data() };
+        if (user) {
           setUserData(user);
 
           // Fetch follow stats and posts using the UID
@@ -62,6 +59,17 @@ export default function UserProfilePage() {
 
     fetchUserData();
   }, [uid]);
+
+  const handleFollowStatusChange = async (isNowFollowing) => {
+    // Refetch follower count when follow status changes
+    if (userData?.uid) {
+      const newFollowerCount = await followService.getFollowerCount(userData.uid);
+      setFollowStats(prev => ({
+        ...prev,
+        followers: newFollowerCount,
+      }));
+    }
+  };
 
   if (loading) {
     return (
@@ -134,6 +142,7 @@ export default function UserProfilePage() {
                   displayName: userData.displayName || '',
                   photoURL: userData.photoURL || '',
                 }}
+                onFollowStatusChange={handleFollowStatusChange}
               />
             </div>
           </div>

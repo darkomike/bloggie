@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { followService } from '@/lib/firebase/follow-service';
 import { useAuth } from './AuthProvider';
 
-export default function FollowButton({ targetUserId, targetUserData = {} }) {
+export default function FollowButton({ targetUserId, targetUserData = {}, onFollowStatusChange }) {
   const { user } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,6 +41,10 @@ export default function FollowButton({ targetUserId, targetUserData = {} }) {
         const success = await followService.unfollowUser(user.uid, targetUserId);
         if (success) {
           setIsFollowing(false);
+          // Notify parent component that follow status changed
+          if (onFollowStatusChange) {
+            onFollowStatusChange(false);
+          }
         }
       } else {
         // Follow
@@ -58,6 +62,10 @@ export default function FollowButton({ targetUserId, targetUserData = {} }) {
         );
         if (success) {
           setIsFollowing(true);
+          // Notify parent component that follow status changed
+          if (onFollowStatusChange) {
+            onFollowStatusChange(true);
+          }
         }
       }
     } catch (error) {
