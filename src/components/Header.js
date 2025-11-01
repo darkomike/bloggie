@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useAuth } from './AuthProvider';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
+import SearchBar from './SearchBar';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -75,6 +76,9 @@ export default function Header() {
               Contact
             </Link>
           </div>
+
+          {/* Search Bar */}
+          <SearchBar />
 
           {/* Right Side: Theme Toggle & Auth */}
           <div className="flex items-center space-x-4">
