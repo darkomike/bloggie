@@ -2,8 +2,6 @@
 
 import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { uploadUserAvatar, deleteBlob } from '@/lib/vercel-blob-service';
 import { followService } from '@/lib/firebase/follow-service';
@@ -40,11 +38,9 @@ export default function ProfilePage() {
       if (!user) return;
 
       try {
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
+        const userData = await userService.getUserById(user.uid);
 
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
+        if (userData) {
           setProfile({
             displayName: userData.displayName || user.displayName || '',
             username: userData.username || '',
@@ -112,12 +108,10 @@ export default function ProfilePage() {
       // Update Firebase Auth profile
       await updateProfile(user, { photoURL });
       
-      // Update Firestore profile
-      const docRef = doc(db, 'users', user.uid);
-      await setDoc(docRef, {
+      // Update Firestore profile using userService
+      await userService.updateUser(user.uid, {
         photoURL,
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
+      });
 
       setMessage({ type: 'success', text: 'Profile photo updated!' });
     } catch (error) {
@@ -174,9 +168,8 @@ export default function ProfilePage() {
         await updateProfile(user, { displayName: profile.displayName });
       }
 
-      // Update or create Firestore profile document
-      const docRef = doc(db, 'users', user.uid);
-      await setDoc(docRef, {
+      // Update Firestore profile using userService
+      await userService.updateUser(user.uid, {
         uid: user.uid,
         email: user.email,
         displayName: profile.displayName,
@@ -187,8 +180,7 @@ export default function ProfilePage() {
         linkedin: profile.linkedin,
         username: profile.username,
         photoURL: user.photoURL || '',
-        updatedAt: serverTimestamp(),
-      }, { merge: true }); // Use merge to not overwrite createdAt
+      });
 
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error) {

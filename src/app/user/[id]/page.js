@@ -21,6 +21,11 @@ export default function UserProfilePage() {
     followers: 0,
     following: 0,
   });
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
+  const [followersList, setFollowersList] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
+  const [listsLoading, setListsLoading] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -68,6 +73,48 @@ export default function UserProfilePage() {
         ...prev,
         followers: newFollowerCount,
       }));
+    }
+  };
+
+  const handleShowFollowers = async () => {
+    if (showFollowers) {
+      setShowFollowers(false);
+      return;
+    }
+    
+    // Close following if it's open
+    setShowFollowing(false);
+    
+    setListsLoading(true);
+    try {
+      const followers = await followService.getFollowers(uid);
+      setFollowersList(followers || []);
+      setShowFollowers(true);
+    } catch (error) {
+      console.error('Error fetching followers:', error);
+    } finally {
+      setListsLoading(false);
+    }
+  };
+
+  const handleShowFollowing = async () => {
+    if (showFollowing) {
+      setShowFollowing(false);
+      return;
+    }
+    
+    // Close followers if it's open
+    setShowFollowers(false);
+    
+    setListsLoading(true);
+    try {
+      const following = await followService.getFollowing(uid);
+      setFollowingList(following || []);
+      setShowFollowing(true);
+    } catch (error) {
+      console.error('Error fetching following:', error);
+    } finally {
+      setListsLoading(false);
     }
   };
 
@@ -149,18 +196,24 @@ export default function UserProfilePage() {
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-center">
+            <button
+              onClick={handleShowFollowers}
+              className="text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 p-4 rounded-lg transition-colors cursor-pointer"
+            >
               <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
                 {followStats.followers}
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Followers</p>
-            </div>
-            <div className="text-center">
+            </button>
+            <button
+              onClick={handleShowFollowing}
+              className="text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 p-4 rounded-lg transition-colors cursor-pointer"
+            >
               <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">
                 {followStats.following}
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Following</p>
-            </div>
+            </button>
             <div className="text-center">
               <div className="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400">
                 {userPosts.length}
@@ -229,6 +282,105 @@ export default function UserProfilePage() {
                   </a>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Followers/Following Lists Section */}
+          {(showFollowers || showFollowing) && (
+            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {showFollowers ? 'Followers' : 'Following'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowFollowers(false);
+                    setShowFollowing(false);
+                  }}
+                  className="text-2xl text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors font-light"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+
+              {listsLoading ? (
+                <p className="text-gray-600 dark:text-gray-400 text-center py-8">Loading...</p>
+              ) : showFollowers && followersList.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {followersList.map((follower) => (
+                    <div
+                      key={follower.followerId}
+                      className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:bg-gray-700/50 transition-all"
+                    >
+                      <Link
+                        href={`/user/${follower.followerId}`}
+                        className="flex items-center gap-3 h-full w-full"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-blue-500 overflow-hidden shrink-0">
+                          {follower.followerPhotoURL ? (
+                            <Image
+                              src={follower.followerPhotoURL}
+                              alt={follower.followerName}
+                              width={48}
+                              height={48}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-blue-500 text-white font-bold">
+                              {follower.followerName?.[0] || 'U'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400">
+                            {follower.followerName}
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : showFollowing && followingList.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {followingList.map((following) => (
+                    <div
+                      key={following.followingId}
+                      className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:bg-gray-700/50 transition-all"
+                    >
+                      <Link
+                        href={`/user/${following.followingId}`}
+                        className="flex items-center gap-3 h-full w-full"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-purple-500 overflow-hidden shrink-0">
+                          {following.followingPhotoURL ? (
+                            <Image
+                              src={following.followingPhotoURL}
+                              alt={following.followingName}
+                              width={48}
+                              height={48}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-purple-500 text-white font-bold">
+                              {following.followingName?.[0] || 'U'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400">
+                            {following.followingName}
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-600 dark:text-gray-400 text-center py-8">
+                  {showFollowers ? 'No followers yet' : 'Not following anyone yet'}
+                </p>
+              )}
             </div>
           )}
 
