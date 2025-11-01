@@ -28,8 +28,17 @@ export default function UserProfilePage() {
       if (!username) return;
 
       try {
-        // Fetch user by username
-        const user = await followService.getUserByUsername(username);
+        // Try to fetch user by username first, then by UID if that fails
+        let user = await followService.getUserByUsername(username);
+        
+        // If not found by username, try by UID (for backward compatibility)
+        if (!user) {
+          const userRef = doc(db, 'users', username);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            user = { uid: userSnap.id, ...userSnap.data() };
+          }
+        }
 
         if (user) {
           setUserData(user);

@@ -7,18 +7,22 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { uploadUserAvatar, deleteBlob } from '@/lib/vercel-blob-service';
 import { followService } from '@/lib/firebase/follow-service';
+import { userService } from '@/lib/firebase/user-service';
+import { validateUsername } from '@/lib/usernameUtils';
 import FollowListModal from '@/components/FollowListModal';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState({
     displayName: '',
+    username: '',
     bio: '',
     website: '',
     twitter: '',
     github: '',
     linkedin: '',
   });
+  const [initialUsername, setInitialUsername] = useState('');
   const [followStats, setFollowStats] = useState({
     followers: 0,
     following: 0,
@@ -29,6 +33,7 @@ export default function ProfilePage() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [usernameError, setUsernameError] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -42,12 +47,14 @@ export default function ProfilePage() {
           const userData = docSnap.data();
           setProfile({
             displayName: userData.displayName || user.displayName || '',
+            username: userData.username || '',
             bio: userData.bio || '',
             website: userData.website || '',
             twitter: userData.twitter || '',
             github: userData.github || '',
             linkedin: userData.linkedin || '',
           });
+          setInitialUsername(userData.username || '');
         } else {
           // Document doesn't exist, set default values from auth
           setProfile(prev => ({ 
@@ -76,7 +83,13 @@ export default function ProfilePage() {
   }, [user]);
 
   const handleChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setProfile({ ...profile, [name]: value });
+    
+    // Clear username error when user edits the field
+    if (name === 'username') {
+      setUsernameError('');
+    }
   };
 
   const handleImageUpload = async (e) => {
@@ -135,6 +148,27 @@ export default function ProfilePage() {
     setMessage({ type: '', text: '' });
 
     try {
+      // Validate username if it has changed
+      if (profile.username !== initialUsername) {
+        // Validate format
+        if (!validateUsername(profile.username)) {
+          setUsernameError('Username must be 3-30 characters with only lowercase letters, numbers, hyphens, underscores, or dots');
+          setSaving(false);
+          return;
+        }
+
+        // Check if username is available
+        const isAvailable = await userService.isUsernameAvailable(profile.username, user.uid);
+        if (!isAvailable) {
+          setUsernameError('Username is already taken');
+          setSaving(false);
+          return;
+        }
+
+        // Update username
+        await userService.changeUsername(user.uid, profile.username);
+      }
+
       // Update Firebase Auth profile
       if (profile.displayName !== user.displayName) {
         await updateProfile(user, { displayName: profile.displayName });
@@ -151,6 +185,7 @@ export default function ProfilePage() {
         twitter: profile.twitter,
         github: profile.github,
         linkedin: profile.linkedin,
+        username: profile.username,
         photoURL: user.photoURL || '',
         updatedAt: serverTimestamp(),
       }, { merge: true }); // Use merge to not overwrite createdAt
@@ -158,7 +193,12 @@ export default function ProfilePage() {
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error) {
       console.error('Error updating profile:', error);
-      setMessage({ type: 'error', text: 'Failed to update profile' });
+      if (error.message && error.message.includes('already taken')) {
+        setUsernameError('Username is already taken');
+        setMessage({ type: 'error', text: 'Username is already taken' });
+      } else {
+        setMessage({ type: 'error', text: 'Failed to update profile' });
+      }
     } finally {
       setSaving(false);
     }
@@ -317,6 +357,35 @@ export default function ProfilePage() {
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Email cannot be changed
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={profile.username}
+                  onChange={(e) => {
+                    handleChange(e);
+                  }}
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    usernameError
+                      ? 'border-red-500 dark:border-red-500'
+                      : 'border-gray-300 dark:border-gray-600'
+                  } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  placeholder="your-username"
+                />
+                {usernameError && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                    {usernameError}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  3-30 characters, lowercase letters, numbers, hyphens, underscores, and dots allowed
                 </p>
               </div>
 

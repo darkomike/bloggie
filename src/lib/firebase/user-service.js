@@ -13,7 +13,6 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './config';
-import UserModel from '@/models/userModel';
 
 const USERS_COLLECTION = 'users';
 
@@ -29,7 +28,10 @@ const fetchUsers = async (constraints) => {
   if (!checkFirestore()) return [];
   const q = query(collection(db, USERS_COLLECTION), ...constraints);
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map((doc) => UserModel.fromFirestore(doc));
+  return querySnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 };
 
 export const userService = {
@@ -46,7 +48,10 @@ export const userService = {
     const docRef = doc(db, USERS_COLLECTION, uid);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) return null;
-    return UserModel.fromFirestore({ id: docSnap.id, ...docSnap.data() });
+    return {
+      id: docSnap.id,
+      ...docSnap.data(),
+    };
   },
 
   // Create or update user
@@ -81,6 +86,57 @@ export const userService = {
     } catch (error) {
       console.error('Error deleting user:', error);
       return false;
+    }
+  },
+
+  // Check if username is available
+  async isUsernameAvailable(username, excludeUid = null) {
+    if (!checkFirestore() || !username) return false;
+    try {
+      const q = query(
+        collection(db, USERS_COLLECTION),
+        where('username', '==', username.toLowerCase())
+      );
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) return true;
+      
+      // If excludeUid is provided, check if the username belongs to a different user
+      if (excludeUid) {
+        const existingUser = snapshot.docs[0];
+        return existingUser.id === excludeUid;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error checking username availability:', error);
+      return false;
+    }
+  },
+
+  // Change user username
+  async changeUsername(uid, newUsername) {
+    if (!checkFirestore() || !uid || !newUsername) return null;
+    
+    try {
+      // Check if new username is available (excluding current user's UID)
+      const isAvailable = await this.isUsernameAvailable(newUsername, uid);
+      if (!isAvailable) {
+        throw new Error('Username is already taken');
+      }
+      
+      const docRef = doc(db, USERS_COLLECTION, uid);
+      await updateDoc(docRef, {
+        username: newUsername.toLowerCase(),
+        updatedAt: Timestamp.now(),
+      });
+      
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return null;
+      return UserModel.fromFirestore({ id: docSnap.id, ...docSnap.data() });
+    } catch (error) {
+      console.error('Error changing username:', error);
+      throw error;
     }
   },
 };

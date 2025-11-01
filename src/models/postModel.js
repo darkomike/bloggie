@@ -1,40 +1,38 @@
 // Post model for Firestore
 export class PostModel {
-		constructor({
-			id = '',
-			title = '',
-			slug = '',
-			content = '',
-			category = '',
-			author = null,
-			createdAt = null,
-			updatedAt = null,
-			tags = [],
-			coverImage = '',
-			status = 'published',
-			readingTime = 0,
-			published = true,
-			excerpt = '',
-			// Removed views, likes, comments, shares fields (handled by separate collections)
-		} = {}) {
-			this.id = id;
-			this.title = title;
-			this.slug = slug;
-			this.content = content;
-			this.category = category;
-			this.author = author; // { uid, name, avatar }
-			this.createdAt = createdAt;
-			this.updatedAt = updatedAt;
-			this.tags = tags;
-			this.coverImage = coverImage;
-			this.status = status;
-			this.readingTime = readingTime;
-			this.published = published;
-			this.excerpt = excerpt;
-			// Removed views, likes, comments, shares assignments
-		}
-
-	static fromFirestore(doc) {
+	constructor({
+		id = '',
+		title = '',
+		slug = '',
+		content = '',
+		category = '',
+		author = null,
+		createdAt = null,
+		updatedAt = null,
+		tags = [],
+		coverImage = '',
+		status = 'published',
+		readingTime = 0,
+		published = true,
+		excerpt = '',
+		// Removed views, likes, comments, shares fields (handled by separate collections)
+	} = {}) {
+		this.id = id;
+		this.title = title;
+		this.slug = slug;
+		this.content = content;
+		this.category = category;
+		this.author = author; // { uid, name, avatar, username, email }
+		this.createdAt = createdAt;
+		this.updatedAt = updatedAt;
+		this.tags = tags;
+		this.coverImage = coverImage;
+		this.status = status;
+		this.readingTime = readingTime;
+		this.published = published;
+		this.excerpt = excerpt;
+		// Removed views, likes, comments, shares assignments
+	}	static fromFirestore(doc) {
 		const data = doc.data ? doc.data() : doc;
 			return new PostModel({
 				id: doc.id || data.id || '',

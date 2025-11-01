@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { generateUniqueUsername } from '@/lib/usernameUtils';
 
 const AuthContext = createContext({
   user: null,
@@ -58,6 +59,9 @@ export function AuthProvider({ children }) {
     if (!db) throw new Error('Firebase Firestore is not configured');
     
     try {
+      // Generate unique username from email
+      const username = await generateUniqueUsername(email);
+      
       const result = await createUserWithEmailAndPassword(auth, email, password);
       
       if (result.user) {
@@ -71,6 +75,7 @@ export function AuthProvider({ children }) {
         await setDoc(userRef, {
           uid: result.user.uid,
           email: result.user.email,
+          username: username,
           displayName: displayName || '',
           bio: '',
           website: '',
