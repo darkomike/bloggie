@@ -45,8 +45,8 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm dark:border-gray-700 dark:bg-gray-900/95">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+      <nav className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="flex h-16 sm:h-20 items-center justify-between gap-4">
           {/* Logo */}
           <div className="shrink-0">
             <Link href="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -55,16 +55,16 @@ export default function Header() {
                 alt="Bloggie Logo"
                 width={40}
                 height={40}
-                className="h-10 w-10 rounded-lg object-cover"
+                className="h-9 sm:h-10 w-9 sm:w-10 rounded-lg object-cover"
               />
-              <span className="hidden sm:inline text-xl font-extrabold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
+              <span className="hidden sm:inline text-lg sm:text-xl font-extrabold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
                 Bloggie
               </span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:justify-center md:flex-1 md:gap-8">
+          <div className="hidden md:flex md:items-center md:justify-center md:flex-1 md:gap-6 lg:gap-8">
             
             <Link
               href="/blog"

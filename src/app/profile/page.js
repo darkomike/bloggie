@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { updateProfile } from 'firebase/auth';
 import { uploadUserAvatar, deleteBlob } from '@/lib/vercel-blob-service';
 import { followService } from '@/lib/firebase/follow-service';
@@ -257,43 +258,43 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-800 dark:via-indigo-800 dark:to-purple-900 py-16 sm:py-20 md:py-24 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-800 dark:via-indigo-800 dark:to-purple-900 py-12 sm:py-16 md:py-20 lg:py-24 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-1/4 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-3xl"></div>
           <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl"></div>
         </div>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-4 sm:mb-6">
+        <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 relative z-10">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-3 sm:mb-4 md:mb-6">
             Profile Settings
           </h1>
-          <p className="text-lg sm:text-xl text-blue-100">
+          <p className="text-base sm:text-lg md:text-xl text-blue-100">
             Manage your account information and customize your profile
           </p>
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+      <div className="mx-auto max-w-5xl px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-12 md:py-20">
         {/* Follow Stats */}
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-10">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-10">
           <button
             onClick={() => setShowFollowersModal(true)}
-            className="group bg-white dark:bg-gray-800 rounded-2xl p-7 border border-gray-100 dark:border-gray-700 text-center hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+            className="group bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 md:p-7 border border-gray-100 dark:border-gray-700 text-center hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
           >
-            <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent">
+            <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent">
               {followStats.followers}
             </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-3 font-medium group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 mt-2 sm:mt-3 font-medium group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">
               Followers
             </p>
           </button>
           <button
             onClick={() => setShowFollowingModal(true)}
-            className="group bg-white dark:bg-gray-800 rounded-2xl p-7 border border-gray-100 dark:border-gray-700 text-center hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+            className="group bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 md:p-7 border border-gray-100 dark:border-gray-700 text-center hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
           >
-            <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+            <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
               {followStats.following}
             </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-3 font-medium group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 mt-2 sm:mt-3 font-medium group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">
               Following
             </p>
           </button>
@@ -301,26 +302,28 @@ export default function ProfilePage() {
 
         <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-xl dark:shadow-2xl">
           {/* Profile Photo Section */}
-          <div className="p-8 sm:p-10 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="p-6 sm:p-8 md:p-10 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 flex items-center gap-3">
+              <div className="w-9 sm:w-10 h-9 sm:h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                <svg className="w-5 sm:w-6 h-5 sm:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
               Profile Photo
             </h2>
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
               <div className="relative">
-                <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-4 border-white dark:border-gray-700 shadow-2xl">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-4 border-white dark:border-gray-700 shadow-2xl">
                   {user.photoURL ? (
-                    <img
+                    <Image
                       src={user.photoURL}
                       alt="Profile"
+                      width={144}
+                      height={144}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-5xl sm:text-6xl font-bold text-white">
+                    <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-white">
                       {user.displayName?.[0] || user.email?.[0] || 'U'}
                     </span>
                   )}
@@ -334,9 +337,9 @@ export default function ProfilePage() {
               <div className="flex-1 text-center sm:text-left">
                 <label
                   htmlFor="photo-upload"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 cursor-pointer transition-all duration-300 transform hover:scale-105"
+                  className="inline-flex items-center gap-2 px-5 sm:px-6 py-2 sm:py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 cursor-pointer transition-all duration-300 transform hover:scale-105 text-sm sm:text-base"
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-4 sm:h-5 w-4 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   Change Photo
@@ -348,7 +351,7 @@ export default function ProfilePage() {
                   onChange={handleImageUpload}
                   className="hidden"
                 />
-                <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   JPG, PNG or GIF. Max size 2MB.
                 </p>
               </div>

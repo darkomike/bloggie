@@ -151,12 +151,12 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-12 sm:pb-20">
+            <div className="mx-auto max-w-5xl px-3 sm:px-4 md:px-6 lg:px-8 pb-12 sm:pb-20">
         {/* Profile Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl dark:shadow-2xl -mt-24 sm:-mt-28 md:-mt-32 relative z-10 p-8 sm:p-10">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-8">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl dark:shadow-2xl -mt-24 sm:-mt-28 md:-mt-32 relative z-10 p-6 sm:p-8 md:p-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6 sm:gap-8">
             {/* Avatar */}
-            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 shrink-0 border-4 border-white dark:border-gray-800 shadow-2xl ring-4 ring-blue-100 dark:ring-indigo-900/50">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 shrink-0 border-4 border-white dark:border-gray-800 shadow-2xl ring-4 ring-blue-100 dark:ring-indigo-900/50 mx-auto sm:mx-0">
               {userData.photoURL ? (
                 <Image
                   src={userData.photoURL}
