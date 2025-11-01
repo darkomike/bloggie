@@ -8,6 +8,160 @@ import { commentService } from '@/lib/firebase/comment-service';
 import { likeService } from '@/lib/firebase/like-service';
 import { viewService } from '@/lib/firebase/view-service';
 import Link from 'next/link';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  ResizableBox,
+} from 'recharts';
+
+// PostPerformanceChart Component
+function PostPerformanceChart({ recentPosts, viewCounts }) {
+  const chartData = recentPosts.map(post => ({
+    name: post.title.length > 15 ? post.title.substring(0, 12) + '...' : post.title,
+    views: viewCounts[post.id] || 0,
+  }));
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-8">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+        <span className="mr-3">📊</span>
+        Post Performance
+      </h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.2)" />
+          <XAxis dataKey="name" stroke="currentColor" className="text-xs sm:text-sm text-gray-600 dark:text-gray-400" />
+          <YAxis stroke="currentColor" className="text-xs sm:text-sm text-gray-600 dark:text-gray-400" />
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+            labelStyle={{ color: '#fff' }}
+          />
+          <Bar dataKey="views" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// EngagementChart Component
+function EngagementChart({ stats }) {
+  const engagementData = [
+    { name: 'Views', value: stats.totalViews || 0, color: '#3b82f6' },
+    { name: 'Likes', value: stats.totalLikes || 0, color: '#ec4899' },
+    { name: 'Comments', value: stats.totalComments || 0, color: '#10b981' },
+  ];
+
+  const totalEngagement = engagementData.reduce((sum, item) => sum + item.value, 0);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+        <span className="mr-3">💬</span>
+        Engagement Breakdown
+      </h3>
+      <div className="grid gap-8 md:gap-0">
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart>
+            <Pie
+              data={engagementData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, value }) => `${name}: ${value}`}
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {engagementData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip 
+              contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="md:ml-8 space-y-3 sm:space-y-4 flex flex-col justify-center">
+          {engagementData.map((item) => (
+            <div key={item.name} className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="h-3 w-3 sm:h-4 sm:w-4 rounded-full mr-3" style={{ backgroundColor: item.color }}></div>
+                <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">{item.name}</span>
+              </div>
+              <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+                {item.value} <span className="text-xs text-gray-500">({totalEngagement > 0 ? Math.round((item.value / totalEngagement) * 100) : 0}%)</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// CategoryDistributionChart Component
+function CategoryDistributionChart({ recentPosts }) {
+  const categoryData = {};
+  recentPosts.forEach(post => {
+    categoryData[post.category] = (categoryData[post.category] || 0) + 1;
+  });
+
+  const chartData = Object.entries(categoryData).map(([category, count]) => ({
+    name: category,
+    count,
+  }));
+
+  if (chartData.length === 0) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 text-center text-gray-500 dark:text-gray-400">
+        <p>No category data available</p>
+      </div>
+    );
+  }
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+        <span className="mr-3">🏷️</span>
+        Posts by Category
+      </h3>
+      <ResponsiveContainer width="100%" height={250}>
+        <PieChart>
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            label={({ name, count }) => `${name} (${count})`}
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="count"
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 // StatsGrid Component
 function StatsGrid({ stats }) {
@@ -341,6 +495,29 @@ export default function DashboardPage() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <StatsGrid stats={stats} />
+
+        {/* Charts Section */}
+        <div className="mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+            <span className="mr-3">📈</span>
+            Analytics
+          </h2>
+          
+          {/* Performance and Engagement Charts */}
+          <div className="grid gap-6 lg:grid-cols-2 mb-8">
+            {recentPosts.length > 0 && (
+              <PostPerformanceChart recentPosts={recentPosts} viewCounts={viewCounts} />
+            )}
+            <EngagementChart stats={stats} />
+          </div>
+
+          {/* Category Distribution Chart */}
+          {recentPosts.length > 0 && (
+            <CategoryDistributionChart recentPosts={recentPosts} />
+          )}
+        </div>
+
+        {/* Recent Posts Table */}
         <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
