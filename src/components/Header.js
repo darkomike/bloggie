@@ -56,7 +56,7 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-1">
+          <div className="hidden md:flex md:items-center md:justify-center md:flex-1 md:gap-8">
             
             <Link
               href="/blog"
@@ -79,28 +79,26 @@ export default function Header() {
               Categories
             </Link>
 
-            {/* Profile & Dashboard links (visible when logged in) */}
+            {/* New Post Button (visible when logged in) */}
             {!loading && user && (
-              <>
-                <Link
-                  href="/blog/new"
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 flex items-center gap-2"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  New Post
-                </Link>
-              </>
+              <Link
+                href="/blog/new"
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 flex items-center gap-2"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                New Post
+              </Link>
             )}
           </div>
 
-          {/* Search Bar */}
-          <SearchBar />
-
-          {/* Right Side: Theme Toggle & Auth */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            <ThemeToggle />
+          {/* Right Side: Search, Theme Toggle & Auth */}
+          <div className="flex items-center justify-end flex-1 gap-8">
+            <div className="flex items-center gap-8">
+              <SearchBar />
+              <ThemeToggle />
+            </div>
 
             {!loading && (
               <>
