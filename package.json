@@ -6,8 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "migrate:usernames": "node scripts/migrateUsernamesFromEmails.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@vercel/blob": "^2.0.0",

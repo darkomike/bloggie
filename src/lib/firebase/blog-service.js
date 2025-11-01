@@ -164,6 +164,24 @@ export const blogService = {
     });
   },
 
+  // Get published posts by author email
+  async getPublishedPostsByAuthorEmail(email) {
+    if (!checkFirestore()) return [];
+    const q = query(
+      collection(db, POSTS_COLLECTION),
+      where('author.email', '==', email),
+      where('published', '==', true),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => {
+      const post = PostModel.fromFirestore({ id: doc.id, ...doc.data() });
+      post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
+      post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
+      return post;
+    });
+  },
+
   // Create a new post
   async createPost(post) {
     const postData = post instanceof PostModel ? post.toFirestore() : post;

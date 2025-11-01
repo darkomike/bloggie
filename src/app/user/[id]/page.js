@@ -13,7 +13,8 @@ import Image from 'next/image';
 
 export default function UserProfilePage() {
   const params = useParams();
-  const username = params.id; // This is actually the username now
+  const encodedEmail = params.id; // This is the email now (URL encoded)
+  const email = encodedEmail ? decodeURIComponent(encodedEmail) : null;
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [postsLoading, setPostsLoading] = useState(false);
@@ -25,30 +26,22 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!username) return;
+      if (!email) return;
 
       try {
-        // Try to fetch user by username first, then by UID if that fails
-        let user = await followService.getUserByUsername(username);
+        // Query users by email
+        const users = await followService.getUsersByEmail(email);
         
-        // If not found by username, try by UID (for backward compatibility)
-        if (!user) {
-          const userRef = doc(db, 'users', username);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            user = { uid: userSnap.id, ...userSnap.data() };
-          }
-        }
-
-        if (user) {
+        if (users && users.length > 0) {
+          const user = users[0];
           setUserData(user);
 
-          // Fetch follow stats and posts using the uid
+          // Fetch follow stats and posts using the email
           setPostsLoading(true);
           const [followerCount, followingCount, authorPosts] = await Promise.all([
             followService.getFollowerCount(user.uid),
             followService.getFollowingCount(user.uid),
-            blogService.getPublishedPostsByAuthor(user.uid),
+            blogService.getPublishedPostsByAuthorEmail(email),
           ]);
           setFollowStats({
             followers: followerCount,
@@ -68,7 +61,7 @@ export default function UserProfilePage() {
     };
 
     fetchUserData();
-  }, [username]);
+  }, [email]);
 
   if (loading) {
     return (

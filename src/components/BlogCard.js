@@ -51,7 +51,7 @@ export default function BlogCard({ post }) {
         <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 sm:pt-4 md:pt-5">
           {/* Author */}
           <Link
-            href={post.author?.username ? `/user/${post.author.username}` : (post.author?.uid ? `/user/${post.author.uid}` : '#')}
+            href={post.author?.email ? `/user/${encodeURIComponent(post.author.email)}` : '#'}
             className="flex items-center gap-2 min-w-0 hover:opacity-75 transition-opacity"
           >
             {post.author?.avatar && (

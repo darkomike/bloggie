@@ -82,6 +82,35 @@ export async function getUserByUsername(username) {
 }
 
 /**
+ * Get users by email
+ * @param {string} email - Email to search for
+ * @returns {Promise<array>} Array of user data or empty array if not found
+ */
+export async function getUsersByEmail(email) {
+  if (!checkFirestore() || !email) return [];
+
+  try {
+    const q = query(
+      collection(db, 'users'),
+      where('email', '==', email)
+    );
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      return [];
+    }
+    
+    return snapshot.docs.map(doc => ({
+      uid: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error('Error fetching users by email:', error);
+    return [];
+  }
+}
+
+/**
  * Follow a user
  * @param {string} followerId - ID of user who is following
  * @param {string} followingId - ID of user to follow
@@ -314,4 +343,5 @@ export const followService = {
   deleteAllFollows,
   getUserIdByUsername,
   getUserByUsername,
+  getUsersByEmail,
 };
