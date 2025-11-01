@@ -178,7 +178,7 @@ export default function SearchBar() {
             </div>
           ) : searchQuery ? (
             <div className="px-4 py-8 text-center">
-              <p className="text-gray-600 dark:text-gray-400">No posts found for "{searchQuery}"</p>
+              <p className="text-gray-600 dark:text-gray-400">{`No posts found for "${searchQuery}"`}</p>
             </div>
           ) : null}
         </div>
