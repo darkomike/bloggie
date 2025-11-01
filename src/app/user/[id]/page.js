@@ -13,8 +13,7 @@ import Image from 'next/image';
 
 export default function UserProfilePage() {
   const params = useParams();
-  const encodedEmail = params.id; // This is the email now (URL encoded)
-  const email = encodedEmail ? decodeURIComponent(encodedEmail) : null;
+  const uid = params.id; // This is the user UID
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [postsLoading, setPostsLoading] = useState(false);
@@ -26,22 +25,23 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!email) return;
+      if (!uid) return;
 
       try {
-        // Query users by email
-        const users = await followService.getUsersByEmail(email);
+        // Fetch user by UID from Firestore
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
         
-        if (users && users.length > 0) {
-          const user = users[0];
+        if (userSnap.exists()) {
+          const user = { uid: userSnap.id, ...userSnap.data() };
           setUserData(user);
 
-          // Fetch follow stats and posts using the email
+          // Fetch follow stats and posts using the UID
           setPostsLoading(true);
           const [followerCount, followingCount, authorPosts] = await Promise.all([
-            followService.getFollowerCount(user.uid),
-            followService.getFollowingCount(user.uid),
-            blogService.getPublishedPostsByAuthorEmail(email),
+            followService.getFollowerCount(uid),
+            followService.getFollowingCount(uid),
+            blogService.getPublishedPostsByAuthor(uid),
           ]);
           setFollowStats({
             followers: followerCount,
@@ -61,7 +61,7 @@ export default function UserProfilePage() {
     };
 
     fetchUserData();
-  }, [email]);
+  }, [uid]);
 
   if (loading) {
     return (
@@ -154,7 +154,7 @@ export default function UserProfilePage() {
             </div>
             <div className="text-center">
               <div className="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                {userData.postCount || 0}
+                {userPosts.length}
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Posts</p>
             </div>
