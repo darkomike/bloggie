@@ -151,28 +151,34 @@ export default function SearchBar() {
         } else if (searchResults.length > 0) {
           dropdownContent = (
             <div className="py-2">
-              {searchResults.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/blog/${post.slug}`}
-                  onClick={handleResultClick}
-                  className="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">
-                        {post.title}
-                      </h4>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1 mt-1">
-                        {post.description || 'No description'}
-                      </p>
+              {searchResults.map((post) => {
+                // Use description if available, otherwise create a snippet from content
+                const description = post.description || 
+                  (post.content ? post.content.substring(0, 100).replace(/[*#`\-_]/g, '') + '...' : 'No description available');
+                
+                return (
+                  <Link
+                    key={post.id}
+                    href={`/blog/${post.slug}`}
+                    onClick={handleResultClick}
+                    className="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">
+                          {post.title}
+                        </h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
+                          {description}
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-blue-300 whitespace-nowrap shrink-0">
+                        {post.category}
+                      </span>
                     </div>
-                    <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-blue-300 whitespace-nowrap">
-                      {post.category}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
               {searchQuery && searchResults.length > 0 && searchResults.length < 8 && (
                 <div className="px-4 py-3 text-center text-xs text-gray-500 dark:text-gray-400">
                   Showing {searchResults.length} results
