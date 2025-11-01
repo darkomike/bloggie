@@ -2,6 +2,7 @@
 export class UserModel {
   constructor({
     uid = '',
+    username = '', // New: unique username for public profile
     name = '',
     displayName = '',
     email = '',
@@ -18,6 +19,7 @@ export class UserModel {
     status = 'active', // active, banned, etc.
   } = {}) {
     this.uid = uid;
+    this.username = username;
     this.name = name;
     this.displayName = displayName;
     this.email = email;
@@ -38,6 +40,7 @@ export class UserModel {
     const data = doc.data ? doc.data() : doc;
     return new UserModel({
       uid: doc.id || data.uid || '',
+      username: data.username || '',
       name: data.name || '',
       displayName: data.displayName || '',
       email: data.email || '',
@@ -58,6 +61,7 @@ export class UserModel {
   toFirestore() {
     return {
       uid: this.uid,
+      username: this.username,
       name: this.name,
       displayName: this.displayName,
       email: this.email,
@@ -78,6 +82,7 @@ export class UserModel {
   copyWith(fields = {}) {
     return new UserModel({
       uid: fields.uid !== undefined ? fields.uid : this.uid,
+      username: fields.username !== undefined ? fields.username : this.username,
       name: fields.name !== undefined ? fields.name : this.name,
       displayName: fields.displayName !== undefined ? fields.displayName : this.displayName,
       email: fields.email !== undefined ? fields.email : this.email,

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
+  const pathname = usePathname();
 
   // Show button when page is scrolled down
   const toggleVisibility = () => {
@@ -28,6 +30,10 @@ export default function ScrollToTop() {
       window.removeEventListener('scroll', toggleVisibility);
     };
   }, []);
+
+  // Don't show on blog pages (they have their own scroll to top)
+  const isBlogPage = pathname?.startsWith('/blog/');
+  if (isBlogPage) return null;
 
   return (
     isVisible && (

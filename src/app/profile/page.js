@@ -6,6 +6,8 @@ import { db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { uploadUserAvatar, deleteBlob } from '@/lib/vercel-blob-service';
+import { followService } from '@/lib/firebase/follow-service';
+import FollowListModal from '@/components/FollowListModal';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -17,10 +19,16 @@ export default function ProfilePage() {
     github: '',
     linkedin: '',
   });
+  const [followStats, setFollowStats] = useState({
+    followers: 0,
+    following: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -47,6 +55,16 @@ export default function ProfilePage() {
             displayName: user.displayName || '' 
           }));
         }
+
+        // Fetch follow stats
+        const [followerCount, followingCount] = await Promise.all([
+          followService.getFollowerCount(user.uid),
+          followService.getFollowingCount(user.uid),
+        ]);
+        setFollowStats({
+          followers: followerCount,
+          following: followingCount,
+        });
       } catch (error) {
         console.error('Error fetching profile:', error);
       } finally {
@@ -95,6 +113,18 @@ export default function ProfilePage() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleFollowChange = ({ type, action }) => {
+    // Update the follow stats when user unfollows someone
+    setFollowStats(prev => {
+      if (type === 'followers') {
+        return { ...prev, followers: Math.max(0, prev.followers - 1) };
+      } else if (type === 'following') {
+        return { ...prev, following: Math.max(0, prev.following - 1) };
+      }
+      return prev;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -175,6 +205,32 @@ export default function ProfilePage() {
       </div>
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        {/* Follow Stats */}
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-8">
+          <button
+            onClick={() => setShowFollowersModal(true)}
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 text-center hover:shadow-lg dark:hover:shadow-xl transition-shadow"
+          >
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
+              {followStats.followers}
+            </div>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
+              Followers
+            </p>
+          </button>
+          <button
+            onClick={() => setShowFollowingModal(true)}
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 text-center hover:shadow-lg dark:hover:shadow-xl transition-shadow"
+          >
+            <div className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400">
+              {followStats.following}
+            </div>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
+              Following
+            </p>
+          </button>
+        </div>
+
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Profile Photo Section */}
           <div className="p-6 sm:p-8 border-b border-gray-200 dark:border-gray-700">
@@ -382,6 +438,24 @@ export default function ProfilePage() {
           </form>
         </div>
       </div>
+
+      {/* Follow Modals */}
+      <FollowListModal
+        isOpen={showFollowersModal}
+        onClose={() => setShowFollowersModal(false)}
+        userId={user?.uid}
+        type="followers"
+        userName={profile.displayName}
+        onFollowChange={handleFollowChange}
+      />
+      <FollowListModal
+        isOpen={showFollowingModal}
+        onClose={() => setShowFollowingModal(false)}
+        userId={user?.uid}
+        type="following"
+        userName={profile.displayName}
+        onFollowChange={handleFollowChange}
+      />
     </div>
   );
 }

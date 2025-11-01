@@ -8,6 +8,7 @@ import { commentService } from '@/lib/firebase/comment-service';
 import { Comment } from '@/models/commentModel';
 import { shareService } from '@/lib/firebase/share-service';
 import { useAuth } from '@/components/AuthProvider';
+import FollowButton from '@/components/FollowButton';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -770,29 +771,42 @@ export default function BlogPostPage() {
           )}
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 pb-6 sm:pb-8 mb-8 sm:mb-10 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center ring-2 ring-blue-100 dark:ring-blue-900 shrink-0">
-                {post.author?.avatar ? (
-                  <Image
-                    src={post.author.avatar}
-                    alt={post.author?.name || 'Author'}
-                    width={56}
-                    height={56}
-                    className="w-full h-full object-cover"
-                    priority
+            <div className="flex items-center justify-between gap-3 sm:gap-4 flex-1">
+              <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                <div className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center ring-2 ring-blue-100 dark:ring-blue-900 shrink-0">
+                  {post.author?.avatar ? (
+                    <Image
+                      src={post.author.avatar}
+                      alt={post.author?.name || 'Author'}
+                      width={56}
+                      height={56}
+                      className="w-full h-full object-cover"
+                      priority
+                    />
+                  ) : (
+                    <span className="text-xs sm:text-sm md:text-base font-bold text-white">
+                      {post.author?.name?.[0] || post.author?.email?.[0] || 'A'}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white">
+                    {post.author?.name || 'Anonymous'}
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Author</p>
+                </div>
+              </div>
+              {user && user.uid !== post.author?.uid && (
+                <div className="shrink-0">
+                  <FollowButton
+                    targetUserId={post.author?.uid}
+                    targetUserData={{
+                      displayName: post.author?.name || 'Author',
+                      photoURL: post.author?.avatar || '',
+                    }}
                   />
-                ) : (
-                  <span className="text-xs sm:text-sm md:text-base font-bold text-white">
-                    {post.author?.name?.[0] || post.author?.email?.[0] || 'A'}
-                  </span>
-                )}
-              </div>
-              <div>
-                <p className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white">
-                  {post.author?.name || 'Anonymous'}
-                </p>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Author</p>
-              </div>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">

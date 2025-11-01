@@ -83,26 +83,13 @@ export default function Header() {
             {!loading && user && (
               <>
                 <Link
-                  href="/profile"
-                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                    isActiveLink('/profile', pathname)
-                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
-                  }`}
+                  href="/blog/new"
+                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 flex items-center gap-2"
                 >
-                  
-                  Profile
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                    isActiveLink('/dashboard', pathname)
-                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
-                  }`}
-                >
-                  
-                  Dashboard
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  New Post
                 </Link>
               </>
             )}
@@ -121,30 +108,47 @@ export default function Header() {
                   <div className="relative">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="flex items-center justify-center rounded-full hover:opacity-80 transition-opacity"
+                      aria-label="User menu"
                     >
                       {user.photoURL ? (
                         <Image
                           src={user.photoURL}
                           alt={user.displayName || 'User'}
-                          width={32}
-                          height={32}
-                          className="h-8 w-8 rounded-full object-cover shadow-md shrink-0"
+                          width={40}
+                          height={40}
+                          className="h-10 w-10 rounded-full object-cover shadow-md shrink-0"
                         />
                       ) : (
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                        <div className="h-10 w-10 shrink-0 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
                           {user.displayName?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                         </div>
                       )}
-                      <span className="hidden md:inline text-xs">{user.displayName || user.email}</span>
-                      <svg className={`h-4 w-4 shrink-0 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
                     </button>
 
                     {userMenuOpen && (
                       <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800 overflow-hidden">
                         <div className="py-1">
+                          <Link
+                            href="/profile"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors font-medium flex items-center gap-2"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Profile
+                          </Link>
+                          <Link
+                            href="/dashboard"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors font-medium flex items-center gap-2"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 16l4-6m-9-3l7-4 7 4" />
+                            </svg>
+                            Dashboard
+                          </Link>
                           <button
                             onClick={handleSignOut}
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 dark:text-gray-300 dark:hover:bg-red-900/20 transition-colors font-medium flex items-center gap-2"
@@ -238,32 +242,14 @@ export default function Header() {
               {!loading && user && (
                 <>
                   <Link
-                    href="/profile"
-                    className={`rounded-lg px-4 py-2.5 text-base font-semibold transition-all flex items-center gap-2 ${
-                      isActiveLink('/profile', pathname)
-                        ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                    }`}
+                    href="/blog/new"
+                    className="rounded-lg px-4 py-2.5 text-base font-semibold bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all flex items-center gap-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Profile
-                  </Link>
-                  <Link
-                    href="/dashboard"
-                    className={`rounded-lg px-4 py-2.5 text-base font-semibold transition-all flex items-center gap-2 ${
-                      isActiveLink('/dashboard', pathname)
-                        ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 16l4-6m-9-3l7-4 7 4" />
-                    </svg>
-                    Dashboard
+                    New Post
                   </Link>
                 </>
               )}
