@@ -129,15 +129,15 @@ export default function Header() {
                           alt={user.displayName || 'User'}
                           width={32}
                           height={32}
-                          className="rounded-full object-cover shadow-md"
+                          className="h-8 w-8 rounded-full object-cover shadow-md shrink-0"
                         />
                       ) : (
-                        <div className="h-8 w-8 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
                           {user.displayName?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                         </div>
                       )}
                       <span className="hidden md:inline text-xs">{user.displayName || user.email}</span>
-                      <svg className={`h-4 w-4 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                      <svg className={`h-4 w-4 shrink-0 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </button>

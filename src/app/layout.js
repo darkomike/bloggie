@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import AuthMiddleware from "@/components/AuthMiddleware";
@@ -59,6 +60,7 @@ export default function RootLayout({ children }) {
                 {children}
               </main>
               <Footer />
+              <ScrollToTop />
             </AuthMiddleware>
           </AuthProvider>
         </ThemeProvider>
