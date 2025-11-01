@@ -95,4 +95,19 @@ export const likeService = {
     const snapshot = await getDocs(q);
     return !snapshot.empty;
   },
+
+  // Get all posts liked by a user
+  async getUserLikedPosts(userId) {
+    if (!checkFirestore() || !userId) return [];
+    const q = query(
+      collection(db, LIKES_COLLECTION),
+      where('userId', '==', userId)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate(),
+    }));
+  },
 };

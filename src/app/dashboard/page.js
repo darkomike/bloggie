@@ -446,6 +446,7 @@ export default function DashboardPage() {
   });
   const [recentPosts, setRecentPosts] = useState([]);
   const [viewCounts, setViewCounts] = useState({});
+  const [likedPosts, setLikedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -457,6 +458,20 @@ export default function DashboardPage() {
         const sortedPosts = userPosts
           .slice(0, 5);
         setRecentPosts(sortedPosts);
+
+        // Fetch liked posts
+        const userLikes = await likeService.getUserLikedPosts(user.uid);
+        const likePostIds = userLikes.map(like => like.postId);
+        
+        // Fetch full post data for liked posts
+        const likedPostsData = [];
+        for (const postId of likePostIds) {
+          const post = await blogService.getPostById(postId);
+          if (post) {
+            likedPostsData.push(post);
+          }
+        }
+        setLikedPosts(likedPostsData);
 
         // Fetch individual view counts for recent posts
         const counts = {};
@@ -575,6 +590,64 @@ export default function DashboardPage() {
           </div>
           <RecentPostsTable recentPosts={recentPosts} loading={loading} viewCounts={viewCounts} />
         </div>
+
+        {/* Liked Posts Section */}
+        <div className="mt-8 sm:mt-12 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+              <svg className="h-6 w-6 mr-3 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.645 20.745l-.019-.01a1 1 0 01-1.39-1.165l2.694-14.796a1 1 0 011.971.242l-2.694 14.796a1 1 0 01-.962.933z" />
+                <path d="M12.97 20.745l.019-.01a1 1 0 001.39-1.165l-2.694-14.796a1 1 0 00-1.971.242l2.694 14.796a1 1 0 00.962.933z" />
+                <path d="M20.053 3.694a1.5 1.5 0 00-1.06-1.06A48.047 48.047 0 0012 2.25c-2.392 0-4.744.384-6.993 1.134a1.5 1.5 0 00-1.06 1.06c-.51 1.896-.722 3.846-.722 5.848v11.383A1.5 1.5 0 004.5 23h15a1.5 1.5 0 001.5-1.5V8.694c0-2.002-.212-3.952-.722-5.848z" />
+              </svg>
+              Liked Posts
+            </h2>
+          </div>
+          <div className="overflow-x-auto">
+            {likedPosts.length === 0 ? (
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                <p>You have not liked any posts yet</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {likedPosts.map((post) => (
+                  <div key={post.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/blog/${post.slug}`} className="block group">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                            {post.title}
+                          </h3>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
+                          {post.excerpt || post.content?.substring(0, 150)}
+                        </p>
+                        <div className="flex items-center gap-3 mt-3">
+                          <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-800 dark:text-blue-300">
+                            {post.category}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            by {post.authorName || 'Unknown'}
+                          </span>
+                        </div>
+                      </div>
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className="flex-shrink-0 inline-flex items-center px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-sm font-medium"
+                      >
+                        <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                        Read
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         <QuickActions />
       </div>
     </div>

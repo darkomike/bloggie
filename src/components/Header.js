@@ -83,23 +83,29 @@ export default function Header() {
               <>
                 <Link
                   href="/profile"
-                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 ${
                     isActiveLink('/profile', pathname)
                       ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
                   }`}
                 >
-                  👤 Profile
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
                 </Link>
                 <Link
                   href="/dashboard"
-                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                  className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 ${
                     isActiveLink('/dashboard', pathname)
                       ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
                   }`}
                 >
-                  📊 Dashboard
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 16l4-6m-9-3l7-4 7 4" />
+                  </svg>
+                  Dashboard
                 </Link>
               </>
             )}
@@ -134,9 +140,12 @@ export default function Header() {
                         <div className="py-1">
                           <button
                             onClick={handleSignOut}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 dark:text-gray-300 dark:hover:bg-red-900/20 transition-colors font-medium"
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 dark:text-gray-300 dark:hover:bg-red-900/20 transition-colors font-medium flex items-center gap-2"
                           >
-                            🚪 Sign out
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Sign out
                           </button>
                         </div>
                       </div>
@@ -217,25 +226,31 @@ export default function Header() {
                 <>
                   <Link
                     href="/profile"
-                    className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-all ${
+                    className={`rounded-lg px-4 py-2.5 text-base font-semibold transition-all flex items-center gap-2 ${
                       isActiveLink('/profile', pathname)
                         ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                         : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    👤 Profile
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Profile
                   </Link>
                   <Link
                     href="/dashboard"
-                    className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-all ${
+                    className={`rounded-lg px-4 py-2.5 text-base font-semibold transition-all flex items-center gap-2 ${
                       isActiveLink('/dashboard', pathname)
                         ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                         : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    📊 Dashboard
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 16l4-6m-9-3l7-4 7 4" />
+                    </svg>
+                    Dashboard
                   </Link>
                 </>
               )}
@@ -266,9 +281,12 @@ export default function Header() {
                       handleSignOut();
                       setMobileMenuOpen(false);
                     }}
-                    className="block w-full text-left rounded-lg px-4 py-2.5 text-base font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+                    className="w-full text-left rounded-lg px-4 py-2.5 text-base font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
                   >
-                    🚪 Sign out
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Sign out
                   </button>
                 </div>
               )}
