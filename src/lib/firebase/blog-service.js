@@ -32,12 +32,20 @@ const fetchPosts = async (constraints) => {
   if (!checkFirestore()) return [];
   const q = query(collection(db, POSTS_COLLECTION), ...constraints);
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map((doc) => {
+  const posts = querySnapshot.docs.map((doc) => {
     const post = PostModel.fromFirestore(doc);
     post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
     post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
     return post;
   });
+  // Debug: Log fetched posts in production
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    console.log('📊 [BlogService] Fetched posts:', {
+      count: posts.length,
+      posts: posts.map(p => ({ id: p.id, title: p.title, slug: p.slug, published: p.published, category: p.category }))
+    });
+  }
+  return posts;
 };
 
 export const blogService = {

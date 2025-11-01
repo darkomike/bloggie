@@ -15,6 +15,7 @@ export default function BlogPage() {
       try {
         // Use blog service to fetch published posts
         const postsData = await blogService.getAllPosts();
+        console.log('📝 [BlogPage] Received posts:', postsData);
         setPosts(postsData);
       } catch (err) {
         console.error('Error fetching posts:', err);
@@ -33,8 +34,8 @@ export default function BlogPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900">
-        <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-12 sm:py-16 md:py-20 lg:py-24">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-12 sm:py-16 md:py-20 lg:py-24">
+          <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-3 sm:mb-4">
                 Our Blog
