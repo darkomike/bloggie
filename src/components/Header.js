@@ -207,25 +207,31 @@ export default function Header() {
               
               <Link
                 href="/blog"
-                className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-all ${
+                className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-all flex items-center gap-2 ${
                   isActiveLink('/blog', pathname)
                     ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                     : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                 }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                📝 Blog
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C6.248 6.253 2 10.541 2 15.5s4.248 9.247 10 9.247m0-13c5.752 0 10-4.542 10-9.247m-10 13v-13m0 0C6.248 6.253 2 10.541 2 15.5s4.248 9.247 10 9.247m0-13c5.752 0 10-4.542 10-9.247" />
+                </svg>
+                Blog
               </Link>
               <Link
                 href="/categories"
-                className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-all ${
+                className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-all flex items-center gap-2 ${
                   isActiveLink('/categories', pathname)
                     ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                     : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                 }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                🏷️ Categories
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7a7 7 0 110 14 7 7 0 010-14zM13 11H7v6h6v-6z" />
+                </svg>
+                Categories
               </Link>
 
               {/* Profile & Dashboard links (visible when logged in) */}
