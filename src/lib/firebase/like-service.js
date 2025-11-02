@@ -10,6 +10,8 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './config';
+import { cacheManager } from '@/lib/cache/cacheManager';
+import { CACHE_CONFIG } from '@/lib/cache/cacheConfig';
 
 const LIKES_COLLECTION = 'likes';
 
@@ -24,17 +26,28 @@ const checkFirestore = () => {
 export const likeService = {
   // Get all likes for a post
   async getLikesByPost(postId) {
+    // Check cache first
+    const cached = cacheManager.get('LIKES', `post_${postId}`);
+    if (cached) {
+      console.log('📦 [LikeService] Using cached likes');
+      return cached;
+    }
+
     if (!checkFirestore()) return [];
     const constraints = [
       where('postId', '==', postId),
     ];
     const q = query(collection(db, LIKES_COLLECTION), ...constraints);
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
+    const likes = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate(),
     }));
+    
+    // Cache the result
+    cacheManager.set('LIKES', `post_${postId}`, likes, CACHE_CONFIG.LIKES.LIKES_BY_POST);
+    return likes;
   },
 
   // Add a like
@@ -49,6 +62,11 @@ export const likeService = {
       userId: like.user.id,
       createdAt: Timestamp.now(),
     });
+    
+    // Invalidate likes cache for this post
+    cacheManager.delete('LIKES', `post_${like.postId}`);
+    cacheManager.delete('LIKES', `count_${like.postId}`);
+    
     return docRef.id;
   },
 
@@ -64,6 +82,11 @@ export const likeService = {
     if (!snapshot.empty) {
       const likeDoc = snapshot.docs[0];
       await deleteDoc(likeDoc.ref);
+      
+      // Invalidate likes cache for this post
+      cacheManager.delete('LIKES', `post_${postId}`);
+      cacheManager.delete('LIKES', `count_${postId}`);
+      
       return likeDoc.id;
     }
     return null;
@@ -87,27 +110,49 @@ export const likeService = {
   // Check if a user has liked a post
   async hasUserLiked(postId, userId) {
     if (!postId || !userId) return false;
+    
+    // Check cache first
+    const cached = cacheManager.get('LIKES', `is_liked_${postId}_${userId}`);
+    if (cached !== null) {
+      return cached;
+    }
+
     const q = query(
       collection(db, 'likes'),
       where('postId', '==', postId),
       where('userId', '==', userId)
     );
     const snapshot = await getDocs(q);
-    return !snapshot.empty;
+    const hasLiked = !snapshot.empty;
+    
+    // Cache the result (short TTL for like status)
+    cacheManager.set('LIKES', `is_liked_${postId}_${userId}`, hasLiked, CACHE_CONFIG.LIKES.LIKES_BY_POST);
+    return hasLiked;
   },
 
   // Get all posts liked by a user
   async getUserLikedPosts(userId) {
+    // Check cache first
+    const cached = cacheManager.get('LIKES', `user_${userId}`);
+    if (cached) {
+      console.log('📦 [LikeService] Using cached user likes');
+      return cached;
+    }
+
     if (!checkFirestore() || !userId) return [];
     const q = query(
       collection(db, LIKES_COLLECTION),
       where('userId', '==', userId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
+    const likes = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate(),
     }));
+    
+    // Cache the result
+    cacheManager.set('LIKES', `user_${userId}`, likes, CACHE_CONFIG.LIKES.USER_LIKES);
+    return likes;
   },
 };

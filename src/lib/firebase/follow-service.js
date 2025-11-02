@@ -12,6 +12,8 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 import { Follow } from '@/models/followModel';
+import { cacheManager } from '@/lib/cache/cacheManager';
+import { CACHE_CONFIG } from '@/lib/cache/cacheConfig';
 
 const FOLLOWS_COLLECTION = 'follows';
 
@@ -186,6 +188,13 @@ export async function isFollowing(followerId, followingId) {
  * @returns {Promise<Array<Follow>>} Array of follow relationships
  */
 export async function getFollowing(userId) {
+  // Check cache first
+  const cached = cacheManager.get('FOLLOWS', `following_${userId}`);
+  if (cached) {
+    console.log('📦 [FollowService] Using cached following');
+    return cached;
+  }
+
   if (!checkFirestore() || !userId) return [];
 
   try {
@@ -194,7 +203,11 @@ export async function getFollowing(userId) {
       where('followerId', '==', userId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
+    const following = snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
+    
+    // Cache the result
+    cacheManager.set('FOLLOWS', `following_${userId}`, following, CACHE_CONFIG.FOLLOWS.FOLLOWING);
+    return following;
   } catch (error) {
     console.error('Error fetching following:', error);
     return [];
@@ -207,6 +220,13 @@ export async function getFollowing(userId) {
  * @returns {Promise<Array<Follow>>} Array of follow relationships
  */
 export async function getFollowers(userId) {
+  // Check cache first
+  const cached = cacheManager.get('FOLLOWS', `followers_${userId}`);
+  if (cached) {
+    console.log('📦 [FollowService] Using cached followers');
+    return cached;
+  }
+
   if (!checkFirestore() || !userId) return [];
 
   try {
@@ -215,7 +235,11 @@ export async function getFollowers(userId) {
       where('followingId', '==', userId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
+    const followers = snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
+    
+    // Cache the result
+    cacheManager.set('FOLLOWS', `followers_${userId}`, followers, CACHE_CONFIG.FOLLOWS.FOLLOWERS);
+    return followers;
   } catch (error) {
     console.error('Error fetching followers:', error);
     return [];
@@ -228,6 +252,13 @@ export async function getFollowers(userId) {
  * @returns {Promise<number>} Follower count
  */
 export async function getFollowerCount(userId) {
+  // Check cache first
+  const cached = cacheManager.get('FOLLOWS', `follower_count_${userId}`);
+  if (cached !== null) {
+    console.log('📦 [FollowService] Using cached follower count');
+    return cached;
+  }
+
   if (!checkFirestore() || !userId) return 0;
 
   try {
@@ -236,7 +267,11 @@ export async function getFollowerCount(userId) {
       where('followingId', '==', userId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.size;
+    const count = snapshot.size;
+    
+    // Cache the result
+    cacheManager.set('FOLLOWS', `follower_count_${userId}`, count, CACHE_CONFIG.FOLLOWS.FOLLOWER_COUNT);
+    return count;
   } catch (error) {
     console.error('Error fetching follower count:', error);
     return 0;
@@ -249,6 +284,13 @@ export async function getFollowerCount(userId) {
  * @returns {Promise<number>} Following count
  */
 export async function getFollowingCount(userId) {
+  // Check cache first
+  const cached = cacheManager.get('FOLLOWS', `following_count_${userId}`);
+  if (cached !== null) {
+    console.log('📦 [FollowService] Using cached following count');
+    return cached;
+  }
+
   if (!checkFirestore() || !userId) return 0;
 
   try {
@@ -257,7 +299,11 @@ export async function getFollowingCount(userId) {
       where('followerId', '==', userId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.size;
+    const count = snapshot.size;
+    
+    // Cache the result
+    cacheManager.set('FOLLOWS', `following_count_${userId}`, count, CACHE_CONFIG.FOLLOWS.FOLLOWING_COUNT);
+    return count;
   } catch (error) {
     console.error('Error fetching following count:', error);
     return 0;
