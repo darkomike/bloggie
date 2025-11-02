@@ -23,8 +23,10 @@ export const CACHE_CONFIG = {
     USER_PROFILE: 1000 * 60 * 15,       // 15 minutes
   },
 
-  // Comments - Cache for 3 minutes (can change frequently)
+  // Comments - Cache for 2-5 minutes (can change frequently)
   COMMENTS: {
+    BY_POST: 1000 * 60 * 3,             // 3 minutes
+    BY_ID: 1000 * 60 * 5,               // 5 minutes
     COMMENTS_BY_POST: 1000 * 60 * 3,    // 3 minutes
     COMMENT_COUNT: 1000 * 60 * 3,       // 3 minutes
   },
@@ -45,10 +47,19 @@ export const CACHE_CONFIG = {
     USER_LIKES: 1000 * 60 * 2,          // 2 minutes
   },
 
-  // Views - Cache for 1 minute (changes very frequently)
+  // Views - Cache for 5-10 minutes
   VIEWS: {
+    ALL_VIEWS: 1000 * 60 * 5,           // 5 minutes
+    BY_POST: 1000 * 60 * 5,             // 5 minutes
+    BY_ID: 1000 * 60 * 10,              // 10 minutes
     VIEW_COUNT: 1000 * 60 * 1,          // 1 minute
     POST_VIEWS: 1000 * 60 * 1,          // 1 minute
+  },
+
+  // Shares - Cache for 5-10 minutes
+  SHARES: {
+    BY_POST: 1000 * 60 * 5,             // 5 minutes
+    BY_ID: 1000 * 60 * 10,              // 10 minutes
   },
 
   // Categories - Cache for 30 minutes (rarely changes)
@@ -57,9 +68,17 @@ export const CACHE_CONFIG = {
     CATEGORY_POSTS: 1000 * 60 * 10,    // 10 minutes
   },
 
-  // Newsletter - Cache for 15 minutes
+  // Newsletter - Cache for 10-15 minutes
   NEWSLETTER: {
+    BY_ID: 1000 * 60 * 15,              // 15 minutes
+    ALL: 1000 * 60 * 10,                // 10 minutes
     SUBSCRIBERS_COUNT: 1000 * 60 * 15,  // 15 minutes
+  },
+
+  // Contacts - Cache for 10-15 minutes
+  CONTACTS: {
+    BY_ID: 1000 * 60 * 15,              // 15 minutes
+    ALL: 1000 * 60 * 10,                // 10 minutes
   },
 
   // Database Stats - Cache for 30 minutes
