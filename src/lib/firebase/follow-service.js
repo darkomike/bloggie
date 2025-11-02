@@ -197,24 +197,29 @@ export async function getFollowing(userId) {
   }
 
   console.log(`📦 [FollowService Cache] ❌ Cache miss for following: ${userId}, fetching from Firebase...`);
-  if (!checkFirestore() || !userId) return [];
+  
+  // Use request coalescing
+  const coalescingKey = `FOLLOWS:following_${userId}`;
+  return cacheManager.getWithCoalescing(coalescingKey, async () => {
+    if (!checkFirestore() || !userId) return [];
 
-  try {
-    const q = query(
-      collection(db, FOLLOWS_COLLECTION),
-      where('followerId', '==', userId)
-    );
-    const snapshot = await getDocs(q);
-    const following = snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
-    
-    console.log(`📦 [FollowService Cache] ✅ Fetched ${following.length} users, now caching...`);
-    // Cache the result
-    cacheManager.set('FOLLOWS', `following_${userId}`, following, CACHE_CONFIG.FOLLOWS.FOLLOWING);
-    return following;
-  } catch (error) {
-    console.error('Error fetching following:', error);
-    return [];
-  }
+    try {
+      const q = query(
+        collection(db, FOLLOWS_COLLECTION),
+        where('followerId', '==', userId)
+      );
+      const snapshot = await getDocs(q);
+      const following = snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
+      
+      console.log(`📦 [FollowService Cache] ✅ Fetched ${following.length} users, now caching...`);
+      // Cache the result
+      cacheManager.set('FOLLOWS', `following_${userId}`, following, CACHE_CONFIG.FOLLOWS.FOLLOWING);
+      return following;
+    } catch (error) {
+      console.error('Error fetching following:', error);
+      return [];
+    }
+  });
 }
 
 /**
@@ -232,24 +237,29 @@ export async function getFollowers(userId) {
   }
 
   console.log(`📦 [FollowService Cache] ❌ Cache miss for followers: ${userId}, fetching from Firebase...`);
-  if (!checkFirestore() || !userId) return [];
+  
+  // Use request coalescing
+  const coalescingKey = `FOLLOWS:followers_${userId}`;
+  return cacheManager.getWithCoalescing(coalescingKey, async () => {
+    if (!checkFirestore() || !userId) return [];
 
-  try {
-    const q = query(
-      collection(db, FOLLOWS_COLLECTION),
-      where('followingId', '==', userId)
-    );
-    const snapshot = await getDocs(q);
-    const followers = snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
-    
-    console.log(`📦 [FollowService Cache] ✅ Fetched ${followers.length} followers, now caching...`);
-    // Cache the result
-    cacheManager.set('FOLLOWS', `followers_${userId}`, followers, CACHE_CONFIG.FOLLOWS.FOLLOWERS);
-    return followers;
-  } catch (error) {
-    console.error('Error fetching followers:', error);
-    return [];
-  }
+    try {
+      const q = query(
+        collection(db, FOLLOWS_COLLECTION),
+        where('followingId', '==', userId)
+      );
+      const snapshot = await getDocs(q);
+      const followers = snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
+      
+      console.log(`📦 [FollowService Cache] ✅ Fetched ${followers.length} followers, now caching...`);
+      // Cache the result
+      cacheManager.set('FOLLOWS', `followers_${userId}`, followers, CACHE_CONFIG.FOLLOWS.FOLLOWERS);
+      return followers;
+    } catch (error) {
+      console.error('Error fetching followers:', error);
+      return [];
+    }
+  });
 }
 
 /**
@@ -265,23 +275,27 @@ export async function getFollowerCount(userId) {
     return cached;
   }
 
-  if (!checkFirestore() || !userId) return 0;
+  // Use request coalescing
+  const coalescingKey = `FOLLOWS:follower_count_${userId}`;
+  return cacheManager.getWithCoalescing(coalescingKey, async () => {
+    if (!checkFirestore() || !userId) return 0;
 
-  try {
-    const q = query(
-      collection(db, FOLLOWS_COLLECTION),
-      where('followingId', '==', userId)
-    );
-    const snapshot = await getDocs(q);
-    const count = snapshot.size;
-    
-    // Cache the result
-    cacheManager.set('FOLLOWS', `follower_count_${userId}`, count, CACHE_CONFIG.FOLLOWS.FOLLOWER_COUNT);
-    return count;
-  } catch (error) {
-    console.error('Error fetching follower count:', error);
-    return 0;
-  }
+    try {
+      const q = query(
+        collection(db, FOLLOWS_COLLECTION),
+        where('followingId', '==', userId)
+      );
+      const snapshot = await getDocs(q);
+      const count = snapshot.size;
+      
+      // Cache the result
+      cacheManager.set('FOLLOWS', `follower_count_${userId}`, count, CACHE_CONFIG.FOLLOWS.FOLLOWER_COUNT);
+      return count;
+    } catch (error) {
+      console.error('Error fetching follower count:', error);
+      return 0;
+    }
+  });
 }
 
 /**
@@ -297,23 +311,27 @@ export async function getFollowingCount(userId) {
     return cached;
   }
 
-  if (!checkFirestore() || !userId) return 0;
+  // Use request coalescing
+  const coalescingKey = `FOLLOWS:following_count_${userId}`;
+  return cacheManager.getWithCoalescing(coalescingKey, async () => {
+    if (!checkFirestore() || !userId) return 0;
 
-  try {
-    const q = query(
-      collection(db, FOLLOWS_COLLECTION),
-      where('followerId', '==', userId)
-    );
-    const snapshot = await getDocs(q);
-    const count = snapshot.size;
-    
-    // Cache the result
-    cacheManager.set('FOLLOWS', `following_count_${userId}`, count, CACHE_CONFIG.FOLLOWS.FOLLOWING_COUNT);
-    return count;
-  } catch (error) {
-    console.error('Error fetching following count:', error);
-    return 0;
-  }
+    try {
+      const q = query(
+        collection(db, FOLLOWS_COLLECTION),
+        where('followerId', '==', userId)
+      );
+      const snapshot = await getDocs(q);
+      const count = snapshot.size;
+      
+      // Cache the result
+      cacheManager.set('FOLLOWS', `following_count_${userId}`, count, CACHE_CONFIG.FOLLOWS.FOLLOWING_COUNT);
+      return count;
+    } catch (error) {
+      console.error('Error fetching following count:', error);
+      return 0;
+    }
+  });
 }
 
 /**

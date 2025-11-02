@@ -65,19 +65,24 @@ export const blogService = {
     }
 
     console.log('📦 [BlogService Cache] ❌ Cache miss, fetching from Firebase...');
-    const constraints = [
-      where('published', '==', true),
-      orderBy('createdAt', 'desc'),
-    ];
-    if (limitCount) {
-      constraints.push(limit(limitCount));
-    }
-    const posts = await fetchPosts(constraints);
     
-    console.log(`📦 [BlogService Cache] ✅ Fetched ${posts.length} posts from Firebase, now caching...`);
-    // Cache the result
-    cacheManager.set('POSTS', cacheKey, posts, CACHE_CONFIG.POSTS.ALL_POSTS);
-    return posts;
+    // Use request coalescing to prevent duplicate queries
+    const coalescingKey = `POSTS:all_${limitCount || 'unlimited'}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const constraints = [
+        where('published', '==', true),
+        orderBy('createdAt', 'desc'),
+      ];
+      if (limitCount) {
+        constraints.push(limit(limitCount));
+      }
+      const posts = await fetchPosts(constraints);
+      
+      console.log(`📦 [BlogService Cache] ✅ Fetched ${posts.length} posts from Firebase, now caching...`);
+      // Cache the result
+      cacheManager.set('POSTS', cacheKey, posts, CACHE_CONFIG.POSTS.ALL_POSTS);
+      return posts;
+    });
   },
 
   // Get post by slug
@@ -90,20 +95,25 @@ export const blogService = {
     }
 
     console.log(`📦 [BlogService Cache] ❌ Cache miss for slug: ${slug}, fetching from Firebase...`);
-    const constraints = [
-      where('slug', '==', slug),
-      where('published', '==', true),
-      limit(1),
-    ];
-    const posts = await fetchPosts(constraints);
-    const post = posts.length > 0 ? posts[0] : null;
     
-    // Cache the result
-    if (post) {
-      console.log(`📦 [BlogService Cache] ✅ Fetched post "${post.title}", now caching...`);
-      cacheManager.set('POSTS', `slug_${slug}`, post, CACHE_CONFIG.POSTS.POST_BY_SLUG);
-    }
-    return post;
+    // Use request coalescing
+    const coalescingKey = `POSTS:slug_${slug}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const constraints = [
+        where('slug', '==', slug),
+        where('published', '==', true),
+        limit(1),
+      ];
+      const posts = await fetchPosts(constraints);
+      const post = posts.length > 0 ? posts[0] : null;
+      
+      // Cache the result
+      if (post) {
+        console.log(`📦 [BlogService Cache] ✅ Fetched post "${post.title}", now caching...`);
+        cacheManager.set('POSTS', `slug_${slug}`, post, CACHE_CONFIG.POSTS.POST_BY_SLUG);
+      }
+      return post;
+    });
   },
 
   // Get post by ID
@@ -151,22 +161,27 @@ export const blogService = {
     }
 
     console.log(`📦 [BlogService Cache] ❌ Cache miss for ${field}: ${value}, fetching from Firebase...`);
-    const constraints = [
-      where('published', '==', true),
-      arrayContains
-        ? where(field, 'array-contains', value)
-        : where(field, '==', value),
-      orderBy('createdAt', 'desc'),
-    ];
-    if (limitCount) {
-      constraints.push(limit(limitCount));
-    }
-    const posts = await fetchPosts(constraints);
     
-    console.log(`📦 [BlogService Cache] ✅ Fetched ${posts.length} posts, now caching...`);
-    // Cache the result
-    cacheManager.set('POSTS', cacheKey, posts, CACHE_CONFIG.POSTS.POSTS_BY_CATEGORY);
-    return posts;
+    // Use request coalescing
+    const coalescingKey = `POSTS:${field}_${value}_${limitCount || 'unlimited'}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const constraints = [
+        where('published', '==', true),
+        arrayContains
+          ? where(field, 'array-contains', value)
+          : where(field, '==', value),
+        orderBy('createdAt', 'desc'),
+      ];
+      if (limitCount) {
+        constraints.push(limit(limitCount));
+      }
+      const posts = await fetchPosts(constraints);
+      
+      console.log(`📦 [BlogService Cache] ✅ Fetched ${posts.length} posts, now caching...`);
+      // Cache the result
+      cacheManager.set('POSTS', cacheKey, posts, CACHE_CONFIG.POSTS.POSTS_BY_CATEGORY);
+      return posts;
+    });
   },
 
   // Get posts by category
@@ -199,39 +214,75 @@ export const blogService = {
 
   // Get all posts by author (published and unpublished)
   async getPostsByAuthor(authorUid) {
-    if (!checkFirestore()) return [];
-    const q = query(
-      collection(db, POSTS_COLLECTION),
-      where('author.uid', '==', authorUid),
-      orderBy('createdAt', 'desc')
-    );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => {
-      const post = PostModel.fromFirestore({ id: doc.id, ...doc.data() });
-      post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
-      post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
-      return post;
-    });
-  },
+    // Check cache first
+    const cached = cacheManager.get('POSTS', `author_${authorUid}`);
+    if (cached) {
+      console.log(`📦 [BlogService Cache] ✅ Using cached posts by author: ${authorUid} (HIT)`);
+      return cached;
+    }
 
-  // Get published posts by author only
-  async getPublishedPostsByAuthor(authorUid) {
-    if (!checkFirestore()) return [];
-    // Fetch all posts by author, then filter by published status to avoid composite index requirement
-    const q = query(
-      collection(db, POSTS_COLLECTION),
-      where('author.uid', '==', authorUid),
-      orderBy('createdAt', 'desc')
-    );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs
-      .filter(doc => doc.data().published === true) // Filter published in client
-      .map((doc) => {
+    console.log(`📦 [BlogService Cache] ❌ Cache miss for author: ${authorUid}, fetching from Firebase...`);
+    
+    // Use request coalescing
+    const coalescingKey = `POSTS:author_${authorUid}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      if (!checkFirestore()) return [];
+      const q = query(
+        collection(db, POSTS_COLLECTION),
+        where('author.uid', '==', authorUid),
+        orderBy('createdAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      const posts = querySnapshot.docs.map((doc) => {
         const post = PostModel.fromFirestore({ id: doc.id, ...doc.data() });
         post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
         post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
         return post;
       });
+      
+      console.log(`📦 [BlogService Cache] ✅ Fetched ${posts.length} posts by author, now caching...`);
+      // Cache the result
+      cacheManager.set('POSTS', `author_${authorUid}`, posts, CACHE_CONFIG.POSTS.POSTS_BY_AUTHOR);
+      return posts;
+    });
+  },
+
+  // Get published posts by author only
+  async getPublishedPostsByAuthor(authorUid) {
+    // Check cache first
+    const cached = cacheManager.get('POSTS', `published_author_${authorUid}`);
+    if (cached) {
+      console.log(`📦 [BlogService Cache] ✅ Using cached published posts by author: ${authorUid} (HIT)`);
+      return cached;
+    }
+
+    console.log(`📦 [BlogService Cache] ❌ Cache miss for published posts by author: ${authorUid}, fetching from Firebase...`);
+    
+    // Use request coalescing
+    const coalescingKey = `POSTS:published_author_${authorUid}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      if (!checkFirestore()) return [];
+      // Fetch all posts by author, then filter by published status to avoid composite index requirement
+      const q = query(
+        collection(db, POSTS_COLLECTION),
+        where('author.uid', '==', authorUid),
+        orderBy('createdAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      const posts = querySnapshot.docs
+        .filter(doc => doc.data().published === true) // Filter published in client
+        .map((doc) => {
+          const post = PostModel.fromFirestore({ id: doc.id, ...doc.data() });
+          post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
+          post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
+          return post;
+        });
+      
+      console.log(`📦 [BlogService Cache] ✅ Fetched ${posts.length} published posts by author, now caching...`);
+      // Cache the result
+      cacheManager.set('POSTS', `published_author_${authorUid}`, posts, CACHE_CONFIG.POSTS.POSTS_BY_AUTHOR);
+      return posts;
+    });
   },
 
   // Create a new post

@@ -42,17 +42,23 @@ export const commentService = {
       return cached;
     }
 
-    const constraints = [
-      where('postId', '==', postId),
-      orderBy('createdAt', 'desc'),
-    ];
-    if (limitCount) constraints.push(limit(limitCount));
-    const q = query(collection(db, COMMENTS_COLLECTION), ...constraints);
-    const querySnapshot = await getDocs(q);
-    const comments = querySnapshot.docs.map((doc) => Comment.fromFirestore(doc));
+    console.log('📦 [Comments Cache] Cache miss for post:', postId);
     
-    cacheManager.set('COMMENTS', cacheKey, comments, CACHE_CONFIG.COMMENTS.BY_POST);
-    return comments;
+    // Use request coalescing
+    const coalescingKey = `COMMENTS:${cacheKey}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const constraints = [
+        where('postId', '==', postId),
+        orderBy('createdAt', 'desc'),
+      ];
+      if (limitCount) constraints.push(limit(limitCount));
+      const q = query(collection(db, COMMENTS_COLLECTION), ...constraints);
+      const querySnapshot = await getDocs(q);
+      const comments = querySnapshot.docs.map((doc) => Comment.fromFirestore(doc));
+      
+      cacheManager.set('COMMENTS', cacheKey, comments, CACHE_CONFIG.COMMENTS.BY_POST);
+      return comments;
+    });
   },
 
   // Add a new comment
@@ -102,15 +108,21 @@ export const commentService = {
       return cached;
     }
     
-    const docRef = doc(db, COMMENTS_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) {
-      return null;
-    }
+    console.log('📦 [Comments Cache] Cache miss for comment ID:', id);
     
-    const comment = Comment.fromFirestore(docSnap);
-    cacheManager.set('COMMENTS', `id_${id}`, comment, CACHE_CONFIG.COMMENTS.BY_ID);
-    return comment;
+    // Use request coalescing
+    const coalescingKey = `COMMENTS:id_${id}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const docRef = doc(db, COMMENTS_COLLECTION, id);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        return null;
+      }
+      
+      const comment = Comment.fromFirestore(docSnap);
+      cacheManager.set('COMMENTS', `id_${id}`, comment, CACHE_CONFIG.COMMENTS.BY_ID);
+      return comment;
+    });
   },
 };
 

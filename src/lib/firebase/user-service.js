@@ -49,14 +49,19 @@ export const userService = {
     }
 
     console.log('📦 [UserService Cache] ❌ Cache miss, fetching users from Firebase...');
-    const constraints = [orderBy('createdAt', 'desc')];
-    if (limitCount) constraints.push(limit(limitCount));
-    const users = await fetchUsers(constraints);
     
-    console.log(`📦 [UserService Cache] ✅ Fetched ${users.length} users, now caching...`);
-    // Cache the result
-    cacheManager.set('USERS', cacheKey, users, CACHE_CONFIG.USERS.USERS_LIST);
-    return users;
+    // Use request coalescing
+    const coalescingKey = `USERS:all_${limitCount || 'unlimited'}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const constraints = [orderBy('createdAt', 'desc')];
+      if (limitCount) constraints.push(limit(limitCount));
+      const users = await fetchUsers(constraints);
+      
+      console.log(`📦 [UserService Cache] ✅ Fetched ${users.length} users, now caching...`);
+      // Cache the result
+      cacheManager.set('USERS', cacheKey, users, CACHE_CONFIG.USERS.USERS_LIST);
+      return users;
+    });
   },
 
   // Get user by UID
@@ -69,20 +74,25 @@ export const userService = {
     }
 
     console.log(`📦 [UserService Cache] ❌ Cache miss for user: ${uid}, fetching from Firebase...`);
-    if (!checkFirestore()) return null;
-    const docRef = doc(db, USERS_COLLECTION, uid);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) return null;
     
-    const user = {
-      id: docSnap.id,
-      ...docSnap.data(),
-    };
-    
-    console.log(`📦 [UserService Cache] ✅ Fetched user "${user.displayName}", now caching...`);
-    // Cache the result
-    cacheManager.set('USERS', uid, user, CACHE_CONFIG.USERS.USER_BY_ID);
-    return user;
+    // Use request coalescing
+    const coalescingKey = `USERS:${uid}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      if (!checkFirestore()) return null;
+      const docRef = doc(db, USERS_COLLECTION, uid);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return null;
+      
+      const user = {
+        id: docSnap.id,
+        ...docSnap.data(),
+      };
+      
+      console.log(`📦 [UserService Cache] ✅ Fetched user "${user.displayName}", now caching...`);
+      // Cache the result
+      cacheManager.set('USERS', uid, user, CACHE_CONFIG.USERS.USER_BY_ID);
+      return user;
+    });
   },
 
   // Create or update user

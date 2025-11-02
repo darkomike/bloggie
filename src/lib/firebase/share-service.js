@@ -37,19 +37,25 @@ export const shareService = {
       return cached;
     }
     
-    const constraints = [
-      where('postId', '==', postId),
-    ];
-    const q = query(collection(db, SHARES_COLLECTION), ...constraints);
-    const querySnapshot = await getDocs(q);
-    const shares = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate(),
-    }));
+    console.log('📦 [Shares Cache] Cache miss for post:', postId);
     
-    cacheManager.set('SHARES', `post_${postId}`, shares, CACHE_CONFIG.SHARES.BY_POST);
-    return shares;
+    // Use request coalescing
+    const coalescingKey = `SHARES:post_${postId}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const constraints = [
+        where('postId', '==', postId),
+      ];
+      const q = query(collection(db, SHARES_COLLECTION), ...constraints);
+      const querySnapshot = await getDocs(q);
+      const shares = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+      }));
+      
+      cacheManager.set('SHARES', `post_${postId}`, shares, CACHE_CONFIG.SHARES.BY_POST);
+      return shares;
+    });
   },
 
   // Add a share
@@ -86,19 +92,23 @@ export const shareService = {
       return cached;
     }
     
-    const docRef = doc(db, SHARES_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) {
-      return null;
-    }
-    
-    const share = {
-      id: docSnap.id,
-      ...docSnap.data(),
-      createdAt: docSnap.data().createdAt?.toDate(),
-    };
-    
-    cacheManager.set('SHARES', `id_${id}`, share, CACHE_CONFIG.SHARES.BY_ID);
-    return share;
+    console.log('📦 [Shares Cache] Cache miss for share:', id);
+    const coalescingKey = `SHARES:id_${id}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const docRef = doc(db, SHARES_COLLECTION, id);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        return null;
+      }
+      
+      const share = {
+        id: docSnap.id,
+        ...docSnap.data(),
+        createdAt: docSnap.data().createdAt?.toDate(),
+      };
+      
+      cacheManager.set('SHARES', `id_${id}`, share, CACHE_CONFIG.SHARES.BY_ID);
+      return share;
+    });
   },
 };

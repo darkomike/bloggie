@@ -31,13 +31,17 @@ const contactService = {
         return cached;
       }
       
-      const doc = await db.collection(CONTACTS_COLLECTION).doc(id).get();
-      if (!doc.exists) return null;
-      
-      const contact = ContactModel.fromFirestore(doc);
-      cacheManager.set('CONTACTS', `id_${id}`, contact, CACHE_CONFIG.CONTACTS.BY_ID);
-      
-      return contact;
+      console.log('📦 [Contacts Cache] Cache miss for contact:', id);
+      const coalescingKey = `CONTACTS:id_${id}`;
+      return cacheManager.getWithCoalescing(coalescingKey, async () => {
+        const doc = await db.collection(CONTACTS_COLLECTION).doc(id).get();
+        if (!doc.exists) return null;
+        
+        const contact = ContactModel.fromFirestore(doc);
+        cacheManager.set('CONTACTS', `id_${id}`, contact, CACHE_CONFIG.CONTACTS.BY_ID);
+        
+        return contact;
+      });
     } catch (error) {
       console.error('Error fetching contact:', error);
       return null;
@@ -52,12 +56,16 @@ const contactService = {
         return cached;
       }
       
-      const snapshot = await db.collection(CONTACTS_COLLECTION).orderBy('createdAt', 'desc').get();
-      const contacts = snapshot.docs.map(doc => ContactModel.fromFirestore(doc));
-      
-      cacheManager.set('CONTACTS', 'all_contacts', contacts, CACHE_CONFIG.CONTACTS.ALL);
-      
-      return contacts;
+      console.log('📦 [Contacts Cache] Cache miss for all contacts');
+      const coalescingKey = 'CONTACTS:all_contacts';
+      return cacheManager.getWithCoalescing(coalescingKey, async () => {
+        const snapshot = await db.collection(CONTACTS_COLLECTION).orderBy('createdAt', 'desc').get();
+        const contacts = snapshot.docs.map(doc => ContactModel.fromFirestore(doc));
+        
+        cacheManager.set('CONTACTS', 'all_contacts', contacts, CACHE_CONFIG.CONTACTS.ALL);
+        
+        return contacts;
+      });
     } catch (error) {
       console.error('Error fetching contacts:', error);
       return [];

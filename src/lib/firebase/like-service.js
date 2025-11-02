@@ -35,22 +35,27 @@ export const likeService = {
     }
 
     console.log(`📦 [LikeService Cache] ❌ Cache miss for likes on post: ${postId}, fetching from Firebase...`);
-    if (!checkFirestore()) return [];
-    const constraints = [
-      where('postId', '==', postId),
-    ];
-    const q = query(collection(db, LIKES_COLLECTION), ...constraints);
-    const querySnapshot = await getDocs(q);
-    const likes = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate(),
-    }));
     
-    console.log(`📦 [LikeService Cache] ✅ Fetched ${likes.length} likes, now caching...`);
-    // Cache the result
-    cacheManager.set('LIKES', `post_${postId}`, likes, CACHE_CONFIG.LIKES.LIKES_BY_POST);
-    return likes;
+    // Use request coalescing
+    const coalescingKey = `LIKES:post_${postId}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      if (!checkFirestore()) return [];
+      const constraints = [
+        where('postId', '==', postId),
+      ];
+      const q = query(collection(db, LIKES_COLLECTION), ...constraints);
+      const querySnapshot = await getDocs(q);
+      const likes = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+      }));
+      
+      console.log(`📦 [LikeService Cache] ✅ Fetched ${likes.length} likes, now caching...`);
+      // Cache the result
+      cacheManager.set('LIKES', `post_${postId}`, likes, CACHE_CONFIG.LIKES.LIKES_BY_POST);
+      return likes;
+    });
   },
 
   // Add a like
@@ -120,17 +125,23 @@ export const likeService = {
       return cached;
     }
 
-    const q = query(
-      collection(db, 'likes'),
-      where('postId', '==', postId),
-      where('userId', '==', userId)
-    );
-    const snapshot = await getDocs(q);
-    const hasLiked = !snapshot.empty;
+    console.log(`📦 [LikeService Cache] ❌ Cache miss for hasUserLiked: ${postId}_${userId}`);
     
-    // Cache the result (short TTL for like status)
-    cacheManager.set('LIKES', `is_liked_${postId}_${userId}`, hasLiked, CACHE_CONFIG.LIKES.LIKES_BY_POST);
-    return hasLiked;
+    // Use request coalescing
+    const coalescingKey = `LIKES:is_liked_${postId}_${userId}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const q = query(
+        collection(db, 'likes'),
+        where('postId', '==', postId),
+        where('userId', '==', userId)
+      );
+      const snapshot = await getDocs(q);
+      const hasLiked = !snapshot.empty;
+      
+      // Cache the result (short TTL for like status)
+      cacheManager.set('LIKES', `is_liked_${postId}_${userId}`, hasLiked, CACHE_CONFIG.LIKES.LIKES_BY_POST);
+      return hasLiked;
+    });
   },
 
   // Get all posts liked by a user
@@ -144,20 +155,26 @@ export const likeService = {
     }
 
     console.log(`📦 [LikeService Cache] ❌ Cache miss for user likes: ${userId}, fetching from Firebase...`);
-    if (!checkFirestore() || !userId) return [];
-    const q = query(
-      collection(db, LIKES_COLLECTION),
-      where('userId', '==', userId)
-    );
-    const snapshot = await getDocs(q);
-    const likes = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate(),
-    }));
     
-    // Cache the result
-    cacheManager.set('LIKES', `user_${userId}`, likes, CACHE_CONFIG.LIKES.USER_LIKES);
-    return likes;
+    // Use request coalescing
+    const coalescingKey = `LIKES:user_${userId}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      if (!checkFirestore()) return [];
+      const q = query(
+        collection(db, LIKES_COLLECTION),
+        where('userId', '==', userId)
+      );
+      const querySnapshot = await getDocs(q);
+      const likes = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+      }));
+      
+      console.log(`📦 [LikeService Cache] ✅ Fetched ${likes.length} likes for user, now caching...`);
+      // Cache the result
+      cacheManager.set('LIKES', `user_${userId}`, likes, CACHE_CONFIG.LIKES.LIKES_BY_USER);
+      return likes;
+    });
   },
 };

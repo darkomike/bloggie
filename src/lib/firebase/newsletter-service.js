@@ -31,13 +31,17 @@ const newsletterService = {
         return cached;
       }
       
-      const doc = await db.collection(NEWSLETTER_COLLECTION).doc(id).get();
-      if (!doc.exists) return null;
-      
-      const subscriber = NewsletterModel.fromFirestore(doc);
-      cacheManager.set('NEWSLETTER', `id_${id}`, subscriber, CACHE_CONFIG.NEWSLETTER.BY_ID);
-      
-      return subscriber;
+      console.log('📦 [Newsletter Cache] Cache miss for subscriber:', id);
+      const coalescingKey = `NEWSLETTER:id_${id}`;
+      return cacheManager.getWithCoalescing(coalescingKey, async () => {
+        const doc = await db.collection(NEWSLETTER_COLLECTION).doc(id).get();
+        if (!doc.exists) return null;
+        
+        const subscriber = NewsletterModel.fromFirestore(doc);
+        cacheManager.set('NEWSLETTER', `id_${id}`, subscriber, CACHE_CONFIG.NEWSLETTER.BY_ID);
+        
+        return subscriber;
+      });
     } catch (error) {
       console.error('Error fetching subscriber:', error);
       return null;
@@ -52,12 +56,16 @@ const newsletterService = {
         return cached;
       }
       
-      const snapshot = await db.collection(NEWSLETTER_COLLECTION).orderBy('subscribedAt', 'desc').get();
-      const subscribers = snapshot.docs.map(doc => NewsletterModel.fromFirestore(doc));
-      
-      cacheManager.set('NEWSLETTER', 'all_subscribers', subscribers, CACHE_CONFIG.NEWSLETTER.ALL);
-      
-      return subscribers;
+      console.log('📦 [Newsletter Cache] Cache miss for all subscribers');
+      const coalescingKey = 'NEWSLETTER:all_subscribers';
+      return cacheManager.getWithCoalescing(coalescingKey, async () => {
+        const snapshot = await db.collection(NEWSLETTER_COLLECTION).orderBy('subscribedAt', 'desc').get();
+        const subscribers = snapshot.docs.map(doc => NewsletterModel.fromFirestore(doc));
+        
+        cacheManager.set('NEWSLETTER', 'all_subscribers', subscribers, CACHE_CONFIG.NEWSLETTER.ALL);
+        
+        return subscribers;
+      });
     } catch (error) {
       console.error('Error fetching subscribers:', error);
       return [];

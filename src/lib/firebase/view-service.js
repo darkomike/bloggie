@@ -34,16 +34,22 @@ export const viewService = {
       return cached;
     }
     
-    const q = collection(db, VIEWS_COLLECTION);
-    const querySnapshot = await getDocs(q);
-    const views = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate(),
-    }));
+    console.log('📦 [Views Cache] Cache miss for all views');
     
-    cacheManager.set('VIEWS', 'all_views', views, CACHE_CONFIG.VIEWS.ALL_VIEWS);
-    return views;
+    // Use request coalescing
+    const coalescingKey = 'VIEWS:all_views';
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const q = collection(db, VIEWS_COLLECTION);
+      const querySnapshot = await getDocs(q);
+      const views = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+      }));
+      
+      cacheManager.set('VIEWS', 'all_views', views, CACHE_CONFIG.VIEWS.ALL_VIEWS);
+      return views;
+    });
   },
   
   // Get all views for a post
@@ -56,19 +62,25 @@ export const viewService = {
       return cached;
     }
     
-    const constraints = [
-      where('postId', '==', postId),
-    ];
-    const q = query(collection(db, VIEWS_COLLECTION), ...constraints);
-    const querySnapshot = await getDocs(q);
-    const views = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate(),
-    }));
+    console.log('📦 [Views Cache] Cache miss for post:', postId);
     
-    cacheManager.set('VIEWS', `post_${postId}`, views, CACHE_CONFIG.VIEWS.BY_POST);
-    return views;
+    // Use request coalescing
+    const coalescingKey = `VIEWS:post_${postId}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const constraints = [
+        where('postId', '==', postId),
+      ];
+      const q = query(collection(db, VIEWS_COLLECTION), ...constraints);
+      const querySnapshot = await getDocs(q);
+      const views = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+      }));
+      
+      cacheManager.set('VIEWS', `post_${postId}`, views, CACHE_CONFIG.VIEWS.BY_POST);
+      return views;
+    });
   },
 
   // Add a view
@@ -105,19 +117,25 @@ export const viewService = {
       return cached;
     }
     
-    const docRef = doc(db, VIEWS_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) {
-      return null;
-    }
+    console.log('📦 [Views Cache] Cache miss for view ID:', id);
     
-    const view = {
-      id: docSnap.id,
-      ...docSnap.data(),
-      createdAt: docSnap.data().createdAt?.toDate(),
-    };
-    
-    cacheManager.set('VIEWS', `id_${id}`, view, CACHE_CONFIG.VIEWS.BY_ID);
-    return view;
+    // Use request coalescing
+    const coalescingKey = `VIEWS:id_${id}`;
+    return cacheManager.getWithCoalescing(coalescingKey, async () => {
+      const docRef = doc(db, VIEWS_COLLECTION, id);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        return null;
+      }
+      
+      const view = {
+        id: docSnap.id,
+        ...docSnap.data(),
+        createdAt: docSnap.data().createdAt?.toDate(),
+      };
+      
+      cacheManager.set('VIEWS', `id_${id}`, view, CACHE_CONFIG.VIEWS.BY_ID);
+      return view;
+    });
   },
 };
