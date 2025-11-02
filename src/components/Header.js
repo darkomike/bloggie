@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from './AuthProvider';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import SearchBar from './SearchBar';
+import AuthRenderer from './AuthRenderer';
 
 const isActiveLink = (href, pathname) => {
   if (href === '/') return pathname === '/';
@@ -19,29 +20,33 @@ export default function Header() {
   const { user, signOut, loading } = useAuth();
   const pathname = usePathname();
 
-  const handleSignOut = async () => {
+  // Show loading state only when Firebase auth is checking AND there's no user
+  const showLoading = loading && !user;
+
+  // Memoize sign out handler to prevent unnecessary re-renders of child components
+  const handleSignOut = useCallback(async () => {
     try {
       await signOut();
       setUserMenuOpen(false);
     } catch (error) {
       console.error('Sign out error:', error);
     }
-  };
+  }, [signOut]);
 
-  // Create auth links with redirect parameter (don't redirect from auth pages themselves)
-  const getLoginLink = () => {
+  // Memoize redirect links to prevent recalculation on every render
+  const getLoginLink = useCallback(() => {
     if (pathname === '/login' || pathname === '/signup') {
       return '/login';
     }
     return `/login?redirect=${encodeURIComponent(pathname)}`;
-  };
+  }, [pathname]);
 
-  const getSignupLink = () => {
+  const getSignupLink = useCallback(() => {
     if (pathname === '/login' || pathname === '/signup') {
       return '/signup';
     }
     return `/signup?redirect=${encodeURIComponent(pathname)}`;
-  };
+  }, [pathname]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm dark:border-gray-700 dark:bg-gray-900/95">
@@ -108,88 +113,15 @@ export default function Header() {
               <ThemeToggle />
             </div>
 
-            {user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center justify-center rounded-full hover:opacity-80 transition-opacity"
-                  aria-label="User menu"
-                >
-                  {user.photoURL ? (
-                    <Image
-                      src={user.photoURL}
-                      alt={user.displayName || 'User'}
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 rounded-full object-cover shadow-md shrink-0"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 shrink-0 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                      {user.displayName?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
-                    </div>
-                  )}
-                </button>
-
-                {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800 overflow-hidden">
-                    <div className="py-1">
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors font-medium flex items-center gap-2"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Profile
-                      </Link>
-                      <Link
-                        href="/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors font-medium flex items-center gap-2"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 16l4-6m-9-3l7-4 7 4" />
-                        </svg>
-                        Dashboard
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 dark:text-gray-300 dark:hover:bg-red-900/20 transition-colors font-medium flex items-center gap-2"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Sign out
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="hidden md:flex md:items-center md:gap-2">
-                <Link
-                  href={getLoginLink()}
-                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                    loading
-                      ? 'opacity-50 pointer-events-none text-gray-400 dark:text-gray-500'
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
-                  }`}
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href={getSignupLink()}
-                  className={`rounded-lg px-4 py-2 text-sm font-semibold shadow-md transition-all ${
-                    loading
-                      ? 'opacity-50 pointer-events-none bg-blue-400 dark:bg-blue-600'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg dark:bg-blue-500 dark:hover:bg-blue-600'
-                  }`}
-                >
-                  Sign up
-                </Link>
-              </div>
-            )}
+            {/* Auth Container - Uses AuthRenderer for clean hydration */}
+            <AuthRenderer
+              getLoginLink={getLoginLink}
+              getSignupLink={getSignupLink}
+              handleSignOut={handleSignOut}
+              userMenuOpen={userMenuOpen}
+              setUserMenuOpen={setUserMenuOpen}
+              showLoading={showLoading}
+            />
 
             {/* Mobile menu button */}
             <button
@@ -249,7 +181,7 @@ export default function Header() {
               </Link>
 
               {/* Profile & Dashboard links (visible when logged in) */}
-              {!loading && user && (
+              {displayUser && (
                 <>
                   <Link
                     href="/blog/new"
@@ -264,18 +196,26 @@ export default function Header() {
                 </>
               )}
               
-              {!loading && !user && (
+              {!displayUser && (
                 <div className="space-y-1 border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                   <Link
                     href={getLoginLink()}
-                    className="block rounded-lg px-4 py-2.5 text-base font-semibold text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+                    className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-colors ${
+                      showLoading
+                        ? 'opacity-50 pointer-events-none text-gray-400'
+                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Sign in
                   </Link>
                   <Link
                     href={getSignupLink()}
-                    className="block rounded-lg bg-blue-600 px-4 py-2.5 text-base font-semibold text-white hover:bg-blue-700 transition-colors dark:bg-blue-500 dark:hover:bg-blue-600"
+                    className={`block rounded-lg px-4 py-2.5 text-base font-semibold transition-colors ${
+                      showLoading
+                        ? 'opacity-50 pointer-events-none bg-blue-400'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Sign up
@@ -283,7 +223,7 @@ export default function Header() {
                 </div>
               )}
 
-              {!loading && user && (
+              {displayUser && (
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                   <button
                     onClick={() => {

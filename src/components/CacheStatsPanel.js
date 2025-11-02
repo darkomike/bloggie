@@ -15,13 +15,14 @@ export default function CacheStatsPanel() {
   const [updateCount, setUpdateCount] = useState(0);
 
   useEffect(() => {
-    // Update stats periodically
+    // Update stats less frequently (every 5 seconds instead of 1 second)
+    // This reduces performance impact while still showing real-time cache behavior
     const interval = setInterval(() => {
       setStats(cacheManager.getStats());
       setUpdateCount(c => c + 1);
-    }, 1000);
+    }, 5000);
 
-    // Also listen for cache events to update immediately
+    // Also listen for cache events to update immediately when cache operations occur
     const handleCacheEvent = () => {
       setStats(cacheManager.getStats());
     };
