@@ -88,7 +88,7 @@ export default function Header() {
             </Link>
 
             {/* New Post Button (visible when logged in) */}
-            {!loading && user && (
+            {user && (
               <Link
                 href="/blog/new"
                 className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 flex items-center gap-2"
@@ -185,6 +185,14 @@ export default function Header() {
                   </div>
                 )}
               </>
+            )}
+
+            {/* Auth Placeholder during loading - maintains layout space */}
+            {loading && (
+              <div className="hidden md:flex md:items-center md:gap-2">
+                <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+              </div>
             )}
 
             {/* Mobile menu button */}
