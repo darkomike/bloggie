@@ -26,12 +26,24 @@ export default function SearchBar() {
       const allPosts = await blogService.getAllPosts();
       const query = value.toLowerCase();
       
-      const filtered = allPosts.filter(post =>
-        post.title.toLowerCase().includes(query) ||
-        post.description?.toLowerCase().includes(query) ||
-        post.content?.toLowerCase().includes(query) ||
-        post.category?.toLowerCase().includes(query)
-      );
+      const filtered = allPosts.filter(post => {
+        // Search in title, description, content, and category
+        const titleMatch = post.title.toLowerCase().includes(query);
+        const descriptionMatch = post.description?.toLowerCase().includes(query);
+        const contentMatch = post.content?.toLowerCase().includes(query);
+        const categoryMatch = post.category?.toLowerCase().includes(query);
+        
+        // Search in author name and email
+        const authorMatch = 
+          post.author?.name?.toLowerCase().includes(query) ||
+          post.author?.username?.toLowerCase().includes(query) ||
+          post.author?.email?.toLowerCase().includes(query);
+        
+        // Search in tags
+        const tagsMatch = post.tags?.some(tag => tag.toLowerCase().includes(query));
+        
+        return titleMatch || descriptionMatch || contentMatch || categoryMatch || authorMatch || tagsMatch;
+      });
 
       // Limit to 8 results
       setSearchResults(filtered.slice(0, 8));
@@ -163,18 +175,45 @@ export default function SearchBar() {
                     onClick={handleResultClick}
                     className="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">
+                    <div className="space-y-2">
+                      {/* Title and Category */}
+                      <div className="flex items-start justify-between gap-3">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1 flex-1">
                           {post.title}
                         </h4>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
-                          {description}
-                        </p>
+                        <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-blue-300 whitespace-nowrap shrink-0">
+                          {post.category}
+                        </span>
                       </div>
-                      <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-blue-300 whitespace-nowrap shrink-0">
-                        {post.category}
-                      </span>
+                      
+                      {/* Description */}
+                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {description}
+                      </p>
+                      
+                      {/* Author and Tags */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Author */}
+                        {post.author?.name && (
+                          <span className="text-xs text-gray-500 dark:text-gray-500">
+                            By <span className="font-medium text-gray-700 dark:text-gray-300">{post.author.name}</span>
+                          </span>
+                        )}
+                        
+                        {/* Tags */}
+                        {post.tags && post.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {post.tags.slice(0, 2).map((tag, idx) => (
+                              <span key={idx} className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs text-gray-600 dark:text-gray-300">
+                                #{tag}
+                              </span>
+                            ))}
+                            {post.tags.length > 2 && (
+                              <span className="text-xs text-gray-500 dark:text-gray-500">+{post.tags.length - 2}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 );
