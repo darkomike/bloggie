@@ -9,6 +9,7 @@ import FollowButton from '@/components/FollowButton';
 import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
 import Image from 'next/image';
+import CacheDebugPanel from '@/components/CacheDebugPanel';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -143,6 +144,7 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+      <CacheDebugPanel />
       {/* Decorative Header Background */}
       <div className="relative h-40 sm:h-48 md:h-56 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-800 dark:via-indigo-800 dark:to-purple-900 overflow-hidden">
         <div className="absolute inset-0 opacity-10">

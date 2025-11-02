@@ -43,14 +43,17 @@ export const userService = {
     const cacheKey = `all_${limitCount || 'unlimited'}`;
     const cached = cacheManager.get('USERS', cacheKey);
     if (cached) {
-      console.log('📦 [UserService] Using cached users list');
+      console.log('📦 [UserService Cache] ✅ Using cached users list (HIT)');
+      console.log(`   └─ Saved ${cached.length} users from cache`);
       return cached;
     }
 
+    console.log('📦 [UserService Cache] ❌ Cache miss, fetching users from Firebase...');
     const constraints = [orderBy('createdAt', 'desc')];
     if (limitCount) constraints.push(limit(limitCount));
     const users = await fetchUsers(constraints);
     
+    console.log(`📦 [UserService Cache] ✅ Fetched ${users.length} users, now caching...`);
     // Cache the result
     cacheManager.set('USERS', cacheKey, users, CACHE_CONFIG.USERS.USERS_LIST);
     return users;
@@ -61,10 +64,11 @@ export const userService = {
     // Check cache first
     const cached = cacheManager.get('USERS', uid);
     if (cached) {
-      console.log('📦 [UserService] Using cached user by ID');
+      console.log(`📦 [UserService Cache] ✅ Using cached user: ${uid} (HIT)`);
       return cached;
     }
 
+    console.log(`📦 [UserService Cache] ❌ Cache miss for user: ${uid}, fetching from Firebase...`);
     if (!checkFirestore()) return null;
     const docRef = doc(db, USERS_COLLECTION, uid);
     const docSnap = await getDoc(docRef);
@@ -75,6 +79,7 @@ export const userService = {
       ...docSnap.data(),
     };
     
+    console.log(`📦 [UserService Cache] ✅ Fetched user "${user.displayName}", now caching...`);
     // Cache the result
     cacheManager.set('USERS', uid, user, CACHE_CONFIG.USERS.USER_BY_ID);
     return user;

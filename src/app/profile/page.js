@@ -9,6 +9,7 @@ import { followService } from '@/lib/firebase/follow-service';
 import { userService } from '@/lib/firebase/user-service';
 import { validateUsername } from '@/lib/usernameUtils';
 import FollowListModal from '@/components/FollowListModal';
+import CacheDebugPanel from '@/components/CacheDebugPanel';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -257,6 +258,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+      <CacheDebugPanel />
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-800 dark:via-indigo-800 dark:to-purple-900 py-12 sm:py-16 md:py-20 lg:py-24 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
+import CacheDebugPanel from '@/components/CacheDebugPanel';
 
 export default function CategoryPage() {
   const params = useParams();
@@ -50,6 +51,7 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <CacheDebugPanel />
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">

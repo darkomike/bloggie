@@ -9,6 +9,7 @@ import { Comment } from '@/models/commentModel';
 import { shareService } from '@/lib/firebase/share-service';
 import { useAuth } from '@/components/AuthProvider';
 import FollowButton from '@/components/FollowButton';
+import CacheDebugPanel from '@/components/CacheDebugPanel';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -689,6 +690,7 @@ export default function BlogPostPage() {
 
   return (
     <>
+      <CacheDebugPanel />
       <ReadingProgressBar />
       
       <FloatingActions

@@ -191,10 +191,12 @@ export async function getFollowing(userId) {
   // Check cache first
   const cached = cacheManager.get('FOLLOWS', `following_${userId}`);
   if (cached) {
-    console.log('📦 [FollowService] Using cached following');
+    console.log(`📦 [FollowService Cache] ✅ Using cached following for user: ${userId} (HIT)`);
+    console.log(`   └─ Saved ${cached.length} users from cache`);
     return cached;
   }
 
+  console.log(`📦 [FollowService Cache] ❌ Cache miss for following: ${userId}, fetching from Firebase...`);
   if (!checkFirestore() || !userId) return [];
 
   try {
@@ -205,6 +207,7 @@ export async function getFollowing(userId) {
     const snapshot = await getDocs(q);
     const following = snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
     
+    console.log(`📦 [FollowService Cache] ✅ Fetched ${following.length} users, now caching...`);
     // Cache the result
     cacheManager.set('FOLLOWS', `following_${userId}`, following, CACHE_CONFIG.FOLLOWS.FOLLOWING);
     return following;
@@ -223,10 +226,12 @@ export async function getFollowers(userId) {
   // Check cache first
   const cached = cacheManager.get('FOLLOWS', `followers_${userId}`);
   if (cached) {
-    console.log('📦 [FollowService] Using cached followers');
+    console.log(`📦 [FollowService Cache] ✅ Using cached followers for user: ${userId} (HIT)`);
+    console.log(`   └─ Saved ${cached.length} followers from cache`);
     return cached;
   }
 
+  console.log(`📦 [FollowService Cache] ❌ Cache miss for followers: ${userId}, fetching from Firebase...`);
   if (!checkFirestore() || !userId) return [];
 
   try {
@@ -237,6 +242,7 @@ export async function getFollowers(userId) {
     const snapshot = await getDocs(q);
     const followers = snapshot.docs.map((doc) => Follow.fromFirestore(doc.data(), doc.id));
     
+    console.log(`📦 [FollowService Cache] ✅ Fetched ${followers.length} followers, now caching...`);
     // Cache the result
     cacheManager.set('FOLLOWS', `followers_${userId}`, followers, CACHE_CONFIG.FOLLOWS.FOLLOWERS);
     return followers;

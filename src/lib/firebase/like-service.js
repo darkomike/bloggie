@@ -29,10 +29,12 @@ export const likeService = {
     // Check cache first
     const cached = cacheManager.get('LIKES', `post_${postId}`);
     if (cached) {
-      console.log('📦 [LikeService] Using cached likes');
+      console.log(`📦 [LikeService Cache] ✅ Using cached likes for post: ${postId} (HIT)`);
+      console.log(`   └─ Saved ${cached.length} likes from cache`);
       return cached;
     }
 
+    console.log(`📦 [LikeService Cache] ❌ Cache miss for likes on post: ${postId}, fetching from Firebase...`);
     if (!checkFirestore()) return [];
     const constraints = [
       where('postId', '==', postId),
@@ -45,6 +47,7 @@ export const likeService = {
       createdAt: doc.data().createdAt?.toDate(),
     }));
     
+    console.log(`📦 [LikeService Cache] ✅ Fetched ${likes.length} likes, now caching...`);
     // Cache the result
     cacheManager.set('LIKES', `post_${postId}`, likes, CACHE_CONFIG.LIKES.LIKES_BY_POST);
     return likes;
@@ -135,10 +138,12 @@ export const likeService = {
     // Check cache first
     const cached = cacheManager.get('LIKES', `user_${userId}`);
     if (cached) {
-      console.log('📦 [LikeService] Using cached user likes');
+      console.log(`📦 [LikeService Cache] ✅ Using cached user likes for: ${userId} (HIT)`);
+      console.log(`   └─ Saved ${cached.length} likes from cache`);
       return cached;
     }
 
+    console.log(`📦 [LikeService Cache] ❌ Cache miss for user likes: ${userId}, fetching from Firebase...`);
     if (!checkFirestore() || !userId) return [];
     const q = query(
       collection(db, LIKES_COLLECTION),

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { blogService } from '@/lib/firebase/blog-service';
 import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
+import CacheDebugPanel from '@/components/CacheDebugPanel';
 
 export default function BlogPage() {
   const [posts, setPosts] = useState([]);
@@ -126,6 +127,7 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
+      <CacheDebugPanel />
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-12 sm:py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

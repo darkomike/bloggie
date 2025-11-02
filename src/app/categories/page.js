@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import  { useState,useEffect } from 'react';
+import CacheDebugPanel from '@/components/CacheDebugPanel';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
@@ -224,6 +225,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
+      <CacheDebugPanel />
       {/* Header */}
       <div className="relative bg-linear-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-900 py-16 sm:py-20 md:py-24 overflow-hidden">
         {/* Animated Background Elements */}
