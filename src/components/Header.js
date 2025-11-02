@@ -169,7 +169,7 @@ export default function Header() {
                     )}
                   </div>
                 ) : (
-                  <div className="hidden md:flex md:items-center md:gap-2">
+                  <div className="hidden md:flex md:items-center md:gap-2 md:min-w-[220px]">
                     <Link
                       href={getLoginLink()}
                       className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800"
@@ -185,14 +185,6 @@ export default function Header() {
                   </div>
                 )}
               </>
-            )}
-
-            {/* Auth Placeholder during loading - maintains layout space */}
-            {loading && (
-              <div className="hidden md:flex md:items-center md:gap-2">
-                <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-              </div>
             )}
 
             {/* Mobile menu button */}
