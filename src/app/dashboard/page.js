@@ -8,6 +8,7 @@ import { commentService } from '@/lib/firebase/comment-service';
 import { likeService } from '@/lib/firebase/like-service';
 import { viewService } from '@/lib/firebase/view-service';
 import Link from 'next/link';
+import CacheDebugPanel from '@/components/CacheDebugPanel';
 import {
   BarChart,
   Bar,
@@ -455,25 +456,20 @@ export default function DashboardPage() {
       try {
         // Get all posts by the current user (published and unpublished)
         const userPosts = await blogService.getPostsByAuthor(user.uid);
-        const sortedPosts = userPosts
-          .slice(0, 5);
+        const sortedPosts = userPosts.slice(0, 5);
         setRecentPosts(sortedPosts);
 
-        // Fetch liked posts
+        // Fetch liked posts in parallel
         const userLikes = await likeService.getUserLikedPosts(user.uid);
         const likePostIds = userLikes.map(like => like.postId);
         
-        // Fetch full post data for liked posts
-        const likedPostsData = [];
-        for (const postId of likePostIds) {
-          const post = await blogService.getPostById(postId);
-          if (post) {
-            likedPostsData.push(post);
-          }
-        }
-        setLikedPosts(likedPostsData);
+        // Fetch full post data for liked posts in parallel
+        const likedPostsData = await Promise.all(
+          likePostIds.map(postId => blogService.getPostById(postId))
+        );
+        setLikedPosts(likedPostsData.filter(post => post));
 
-        // Fetch individual view counts for recent posts
+        // Fetch individual view counts for recent posts (already parallelized with Promise.all)
         const counts = {};
         await Promise.all(sortedPosts.map(async (post) => {
           const views = await viewService.getViewsByPost(post.id);
@@ -481,18 +477,25 @@ export default function DashboardPage() {
         }));
         setViewCounts(counts);
 
-        // Aggregate stats from collections
-        let totalViews = 0;
-        let totalComments = 0;
-        let totalLikes = 0;
-        for (const post of userPosts) {
-          const views = await viewService.getViewsByPost(post.id);
-          totalViews += views.length;
-          const comments = await commentService.getCommentsByPost(post.id);
-          totalComments += comments.length;
-          const likes = await likeService.getLikesByPost(post.id);
-          totalLikes += likes.length;
-        }
+        // Aggregate stats from collections - PARALLELIZE ALL QUERIES
+        const statPromises = userPosts.map(async (post) => {
+          const [views, comments, likes] = await Promise.all([
+            viewService.getViewsByPost(post.id),
+            commentService.getCommentsByPost(post.id),
+            likeService.getLikesByPost(post.id),
+          ]);
+          return {
+            views: views.length,
+            comments: comments.length,
+            likes: likes.length,
+          };
+        });
+
+        const allStats = await Promise.all(statPromises);
+        const totalViews = allStats.reduce((sum, s) => sum + s.views, 0);
+        const totalComments = allStats.reduce((sum, s) => sum + s.comments, 0);
+        const totalLikes = allStats.reduce((sum, s) => sum + s.likes, 0);
+
         setStats({
           totalPosts: userPosts.length,
           totalViews,
@@ -528,6 +531,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
+      <CacheDebugPanel />
       {/* Header */}
       <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-12 sm:py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -633,7 +637,7 @@ export default function DashboardPage() {
                       </div>
                       <Link
                         href={`/blog/${post.slug}`}
-                        className="flex-shrink-0 inline-flex items-center px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-sm font-medium"
+                        className="shrink-0 inline-flex items-center px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-sm font-medium"
                       >
                         <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
