@@ -13,6 +13,8 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './config';
+import { cacheManager } from '@/lib/cache/cacheManager';
+import { CACHE_CONFIG } from '@/lib/cache/cacheConfig';
 
 const USERS_COLLECTION = 'users';
 
@@ -37,21 +39,45 @@ const fetchUsers = async (constraints) => {
 export const userService = {
   // Get all users
   async getAllUsers(limitCount) {
+    // Check cache first
+    const cacheKey = `all_${limitCount || 'unlimited'}`;
+    const cached = cacheManager.get('USERS', cacheKey);
+    if (cached) {
+      console.log('📦 [UserService] Using cached users list');
+      return cached;
+    }
+
     const constraints = [orderBy('createdAt', 'desc')];
     if (limitCount) constraints.push(limit(limitCount));
-    return await fetchUsers(constraints);
+    const users = await fetchUsers(constraints);
+    
+    // Cache the result
+    cacheManager.set('USERS', cacheKey, users, CACHE_CONFIG.USERS.USERS_LIST);
+    return users;
   },
 
   // Get user by UID
   async getUserById(uid) {
+    // Check cache first
+    const cached = cacheManager.get('USERS', uid);
+    if (cached) {
+      console.log('📦 [UserService] Using cached user by ID');
+      return cached;
+    }
+
     if (!checkFirestore()) return null;
     const docRef = doc(db, USERS_COLLECTION, uid);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) return null;
-    return {
+    
+    const user = {
       id: docSnap.id,
       ...docSnap.data(),
     };
+    
+    // Cache the result
+    cacheManager.set('USERS', uid, user, CACHE_CONFIG.USERS.USER_BY_ID);
+    return user;
   },
 
   // Create or update user

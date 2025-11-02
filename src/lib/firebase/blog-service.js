@@ -15,6 +15,8 @@ import {
 import { db } from './config';
 import PostModel from '@/models/postModel';
 import { TimeUtil } from '@/utils/timeUtils';
+import { cacheManager } from '@/lib/cache/cacheManager';
+import { CACHE_CONFIG } from '@/lib/cache/cacheConfig';
 
 const POSTS_COLLECTION = 'posts';
  
@@ -51,6 +53,14 @@ const fetchPosts = async (constraints) => {
 export const blogService = {
   // Get all published posts
   async getAllPosts(limitCount) {
+    // Check cache first
+    const cacheKey = `all_${limitCount || 'unlimited'}`;
+    const cached = cacheManager.get('POSTS', cacheKey);
+    if (cached) {
+      console.log('📦 [BlogService] Using cached posts');
+      return cached;
+    }
+
     const constraints = [
       where('published', '==', true),
       orderBy('createdAt', 'desc'),
@@ -58,36 +68,73 @@ export const blogService = {
     if (limitCount) {
       constraints.push(limit(limitCount));
     }
-  return await fetchPosts(constraints);
+    const posts = await fetchPosts(constraints);
+    
+    // Cache the result
+    cacheManager.set('POSTS', cacheKey, posts, CACHE_CONFIG.POSTS.ALL_POSTS);
+    return posts;
   },
 
   // Get post by slug
   async getPostBySlug(slug) {
+    // Check cache first
+    const cached = cacheManager.get('POSTS', `slug_${slug}`);
+    if (cached) {
+      console.log('📦 [BlogService] Using cached post by slug');
+      return cached;
+    }
+
     const constraints = [
       where('slug', '==', slug),
       where('published', '==', true),
       limit(1),
     ];
     const posts = await fetchPosts(constraints);
-  return posts.length > 0 ? posts[0] : null;
+    const post = posts.length > 0 ? posts[0] : null;
+    
+    // Cache the result
+    if (post) {
+      cacheManager.set('POSTS', `slug_${slug}`, post, CACHE_CONFIG.POSTS.POST_BY_SLUG);
+    }
+    return post;
   },
 
   // Get post by ID
   async getPostById(id) {
+    // Check cache first
+    const cached = cacheManager.get('POSTS', `id_${id}`);
+    if (cached) {
+      console.log('📦 [BlogService] Using cached post by ID');
+      return cached;
+    }
+
     if (!checkFirestore()) return null;
     const docRef = doc(db, POSTS_COLLECTION, id);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) {
       return null;
     }
-  const post = PostModel.fromFirestore({ id: docSnap.id, ...docSnap.data() });
-  post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
-  post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
-  return post;
+    const post = PostModel.fromFirestore({ id: docSnap.id, ...docSnap.data() });
+    post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
+    post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
+    
+    // Cache the result
+    cacheManager.set('POSTS', `id_${id}`, post, CACHE_CONFIG.POSTS.POST_BY_ID);
+    return post;
   },
 
   // Helper to get posts by field
   async getPostsByField(field, value, limitCount, arrayContains = false) {
+    // Generate cache key
+    const cacheKey = `${field}_${value}_${limitCount || 'unlimited'}`;
+    
+    // Check cache first
+    const cached = cacheManager.get('POSTS', cacheKey);
+    if (cached) {
+      console.log(`📦 [BlogService] Using cached posts by ${field}`);
+      return cached;
+    }
+
     const constraints = [
       where('published', '==', true),
       arrayContains
@@ -98,7 +145,11 @@ export const blogService = {
     if (limitCount) {
       constraints.push(limit(limitCount));
     }
-  return await fetchPosts(constraints);
+    const posts = await fetchPosts(constraints);
+    
+    // Cache the result
+    cacheManager.set('POSTS', cacheKey, posts, CACHE_CONFIG.POSTS.POSTS_BY_CATEGORY);
+    return posts;
   },
 
   // Get posts by category
@@ -108,7 +159,7 @@ export const blogService = {
 
   // Get posts by tag
   async getPostsByTag(tag, limitCount) {
-  return await this.getPostsByField('tags', tag, limitCount, true);
+    return await this.getPostsByField('tags', tag, limitCount, true);
   },
 
   // Get draft posts (unpublished) by author
