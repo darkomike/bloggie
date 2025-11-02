@@ -109,10 +109,10 @@ export default function Header() {
               <ThemeToggle />
             </div>
 
-            {/* Auth Container - Always render both user and auth buttons, use CSS to show/hide */}
-            <div suppressHydrationWarning={true}>
-              {/* User Profile Menu - Show when logged in, always rendered to prevent layout shift */}
-              <div className={user ? 'relative' : 'hidden'}>
+            {/* Auth Container - Always render user profile, hide sign in/up when logged in */}
+            <div suppressHydrationWarning={true} className="relative">
+              {/* User Profile Menu - Always rendered (assume logged in on server) */}
+              <div className={!user ? 'hidden' : 'relative'}>
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center justify-center rounded-full hover:opacity-80 transition-opacity"
@@ -170,8 +170,8 @@ export default function Header() {
                 )}
               </div>
 
-              {/* Sign In/Sign Up Buttons - Show when not logged in, always rendered to prevent layout shift */}
-              <div className={!user ? 'hidden md:flex md:items-center md:gap-2' : 'hidden'}>
+              {/* Sign In/Sign Up Buttons - Hidden by default (user assumed logged in on server) */}
+              <div className={user ? 'hidden' : 'hidden md:flex md:items-center md:gap-2'}>
                 <Link
                   href={getLoginLink()}
                   className="rounded-lg px-4 py-2 text-sm font-semibold transition-colors text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800"
