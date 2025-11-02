@@ -256,6 +256,18 @@ export default function ProfilePage() {
     );
   }
 
+  // Protect route - user must be authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">Please sign in to view your profile</p>
+          <a href="/login" className="text-blue-600 dark:text-blue-400 hover:underline">Go to login</a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
       <CacheDebugPanel />
@@ -316,7 +328,7 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
               <div className="relative">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-4 border-white dark:border-gray-700 shadow-2xl">
-                  {user.photoURL ? (
+                  {user && user.photoURL ? (
                     <Image
                       src={user.photoURL}
                       alt="Profile"
@@ -326,7 +338,7 @@ export default function ProfilePage() {
                     />
                   ) : (
                     <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-white">
-                      {user.displayName?.[0] || user.email?.[0] || 'U'}
+                      {user?.displayName?.[0] || user?.email?.[0] || 'U'}
                     </span>
                   )}
                 </div>
