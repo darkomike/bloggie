@@ -41,7 +41,9 @@ const fetchPosts = async (constraints) => {
     return post;
   });
   // Debug: Log fetched posts in production
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+  // Debug: Log fetched posts when running in development or when public cache debug flag is set
+  const shouldLogClient = typeof window !== 'undefined' && (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true');
+  if (shouldLogClient) {
     console.log('📊 [BlogService] Fetched posts:', {
       count: posts.length,
       posts: posts.map(p => ({ id: p.id, title: p.title, slug: p.slug, published: p.published, category: p.category }))
@@ -57,10 +59,12 @@ export const blogService = {
     const cacheKey = `all_${limitCount || 'unlimited'}`;
     const cached = cacheManager.get('POSTS', cacheKey);
     if (cached) {
-      console.log('📦 [BlogService] Using cached posts');
+      console.log('📦 [BlogService Cache] ✅ Using cached posts (HIT)');
+      console.log(`   └─ Saved ${cached.length} posts from cache`);
       return cached;
     }
 
+    console.log('📦 [BlogService Cache] ❌ Cache miss, fetching from Firebase...');
     const constraints = [
       where('published', '==', true),
       orderBy('createdAt', 'desc'),
@@ -70,6 +74,7 @@ export const blogService = {
     }
     const posts = await fetchPosts(constraints);
     
+    console.log(`📦 [BlogService Cache] ✅ Fetched ${posts.length} posts from Firebase, now caching...`);
     // Cache the result
     cacheManager.set('POSTS', cacheKey, posts, CACHE_CONFIG.POSTS.ALL_POSTS);
     return posts;
@@ -80,10 +85,11 @@ export const blogService = {
     // Check cache first
     const cached = cacheManager.get('POSTS', `slug_${slug}`);
     if (cached) {
-      console.log('📦 [BlogService] Using cached post by slug');
+      console.log(`📦 [BlogService Cache] ✅ Using cached post by slug: ${slug} (HIT)`);
       return cached;
     }
 
+    console.log(`📦 [BlogService Cache] ❌ Cache miss for slug: ${slug}, fetching from Firebase...`);
     const constraints = [
       where('slug', '==', slug),
       where('published', '==', true),
@@ -94,6 +100,7 @@ export const blogService = {
     
     // Cache the result
     if (post) {
+      console.log(`📦 [BlogService Cache] ✅ Fetched post "${post.title}", now caching...`);
       cacheManager.set('POSTS', `slug_${slug}`, post, CACHE_CONFIG.POSTS.POST_BY_SLUG);
     }
     return post;
@@ -104,10 +111,11 @@ export const blogService = {
     // Check cache first
     const cached = cacheManager.get('POSTS', `id_${id}`);
     if (cached) {
-      console.log('📦 [BlogService] Using cached post by ID');
+      console.log(`📦 [BlogService Cache] ✅ Using cached post by ID: ${id} (HIT)`);
       return cached;
     }
 
+    console.log(`📦 [BlogService Cache] ❌ Cache miss for ID: ${id}, fetching from Firebase...`);
     if (!checkFirestore()) return null;
     const docRef = doc(db, POSTS_COLLECTION, id);
     const docSnap = await getDoc(docRef);
@@ -118,6 +126,7 @@ export const blogService = {
     post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
     post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
     
+    console.log(`📦 [BlogService Cache] ✅ Fetched post "${post.title}", now caching...`);
     // Cache the result
     cacheManager.set('POSTS', `id_${id}`, post, CACHE_CONFIG.POSTS.POST_BY_ID);
     return post;
@@ -131,10 +140,12 @@ export const blogService = {
     // Check cache first
     const cached = cacheManager.get('POSTS', cacheKey);
     if (cached) {
-      console.log(`📦 [BlogService] Using cached posts by ${field}`);
+      console.log(`📦 [BlogService Cache] ✅ Using cached posts by ${field}: ${value} (HIT)`);
+      console.log(`   └─ Saved ${cached.length} posts from cache`);
       return cached;
     }
 
+    console.log(`📦 [BlogService Cache] ❌ Cache miss for ${field}: ${value}, fetching from Firebase...`);
     const constraints = [
       where('published', '==', true),
       arrayContains
@@ -147,6 +158,7 @@ export const blogService = {
     }
     const posts = await fetchPosts(constraints);
     
+    console.log(`📦 [BlogService Cache] ✅ Fetched ${posts.length} posts, now caching...`);
     // Cache the result
     cacheManager.set('POSTS', cacheKey, posts, CACHE_CONFIG.POSTS.POSTS_BY_CATEGORY);
     return posts;

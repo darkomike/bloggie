@@ -51,8 +51,19 @@ class CacheManager {
       this.timers.set(cacheKey, timer);
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    // Logging control: development OR explicit public debug flag
+    const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
+    if (shouldLog) {
       console.log(`✅ [Cache] Set: ${cacheKey} (TTL: ${ttl}ms)`);
+    }
+
+    // Emit a browser event so client pages (like /blog) can listen and show cache activity
+    try {
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('bloggie-cache', { detail: { action: 'set', key: cacheKey, ttl } }));
+      }
+    } catch (e) {
+      // ignore - safe fallback for non-browser environments
     }
   }
 
@@ -67,9 +78,15 @@ class CacheManager {
     const cached = this.cache.get(cacheKey);
 
     if (!cached) {
-      if (process.env.NODE_ENV === 'development') {
+      const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
+      if (shouldLog) {
         console.log(`❌ [Cache] Miss: ${cacheKey}`);
       }
+      try {
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('bloggie-cache', { detail: { action: 'miss', key: cacheKey } }));
+        }
+      } catch (e) {}
       return null;
     }
 
@@ -85,9 +102,15 @@ class CacheManager {
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
+    if (shouldLog) {
       console.log(`🎯 [Cache] Hit: ${cacheKey}`);
     }
+    try {
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('bloggie-cache', { detail: { action: 'hit', key: cacheKey } }));
+      }
+    } catch (e) {}
     return cached.value;
   }
 
@@ -115,9 +138,15 @@ class CacheManager {
       this.timers.delete(cacheKey);
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
+    if (shouldLog) {
       console.log(`🗑️  [Cache] Deleted: ${cacheKey}`);
     }
+    try {
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('bloggie-cache', { detail: { action: 'delete', key: cacheKey } }));
+      }
+    } catch (e) {}
   }
 
   /**
@@ -136,9 +165,15 @@ class CacheManager {
       }
     });
 
-    if (process.env.NODE_ENV === 'development') {
+    const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
+    if (shouldLog) {
       console.log(`🗑️  [Cache] Cleared namespace: ${namespace} (${keysToDelete.length} entries)`);
     }
+    try {
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('bloggie-cache', { detail: { action: 'clearNamespace', namespace, count: keysToDelete.length } }));
+      }
+    } catch (e) {}
   }
 
   /**
@@ -153,9 +188,15 @@ class CacheManager {
     this.cache.clear();
     this.timers.clear();
 
-    if (process.env.NODE_ENV === 'development') {
+    const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
+    if (shouldLog) {
       console.log(`🗑️  [Cache] Cleared all cache`);
     }
+    try {
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('bloggie-cache', { detail: { action: 'clearAll' } }));
+      }
+    } catch (e) {}
   }
 
   /**
