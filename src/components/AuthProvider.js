@@ -12,13 +12,6 @@ import {
 import { auth, db } from '@/lib/firebase/config';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { generateUniqueUsername } from '@/lib/usernameUtils';
-import {
-  saveAuthState,
-  loadAuthState,
-  clearAuthState,
-  onAuthStateChange,
-  setupCrossTabSync,
-} from '@/lib/authStateStorage';
 
 const AuthContext = createContext({
   user: null,
@@ -31,22 +24,11 @@ const AuthContext = createContext({
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(() => {
-    // On initial load, try to restore from cache to prevent layout shift
-    if (!auth) return false;
-    
-    const cachedAuth = loadAuthState();
-    if (cachedAuth) {
-      // We have cached auth state, so we're not loading
-      return false;
-    }
-    return true;
+    // If auth is not available, we're not loading
+    return !!auth;
   });
 
-  // Sync with auth state storage on mount and when auth state changes
   useEffect(() => {
-    // Setup cross-tab sync
-    setupCrossTabSync();
-    
     // If auth is not configured, nothing to subscribe to
     if (!auth) {
       return undefined;
@@ -54,22 +36,6 @@ export function AuthProvider({ children }) {
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      
-      // Save to persistent storage
-      saveAuthState(currentUser);
-      
-      setLoading(false);
-    });
-
-    return unsubscribe;
-  }, []);
-
-  // Listen to storage events from other tabs
-  useEffect(() => {
-    const unsubscribe = onAuthStateChange((authState) => {
-      // When auth state changes from another tab or from storage event
-      // We don't update user here - Firebase will handle that
-      // This is just for reactive updates if needed
       setLoading(false);
     });
 
@@ -135,8 +101,6 @@ export function AuthProvider({ children }) {
     if (!auth) throw new Error('Firebase Auth is not configured');
     try {
       await firebaseSignOut(auth);
-      // Clear persistent storage on logout
-      clearAuthState();
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;
