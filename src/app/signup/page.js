@@ -1,5 +1,7 @@
 import SignupForm from '@/components/SignupForm';
 import Link from 'next/link';
+import { Suspense } from 'react';
+import LoadingScreen from '@/components/LoadingScreen';
 
 export const metadata = {
   title: 'Sign Up - Bloggie',
@@ -21,7 +23,9 @@ export default function SignupPage() {
             Join our community of writers and readers today.
           </p>
         </div>
-        <SignupForm />
+        <Suspense fallback={<LoadingScreen />}>
+          <SignupForm />
+        </Suspense>
       </div>
     </div>
   );

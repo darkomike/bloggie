@@ -1,5 +1,7 @@
 import LoginForm from '@/components/LoginForm';
 import Link from 'next/link';
+import { Suspense } from 'react';
+import LoadingScreen from '@/components/LoadingScreen';
 
 export const metadata = {
   title: 'Sign In - Bloggie',
@@ -21,7 +23,9 @@ export default function LoginPage() {
             Welcome back! Please enter your details.
           </p>
         </div>
-        <LoginForm />
+        <Suspense fallback={<LoadingScreen />}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );
