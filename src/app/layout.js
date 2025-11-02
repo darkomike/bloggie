@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import AuthMiddleware from "@/components/AuthMiddleware";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -79,6 +80,7 @@ export default function RootLayout({ children }) {
               <Footer />
               <ScrollToTop />
               <SpeedInsights />
+              <Analytics />
             </AuthMiddleware>
           </AuthProvider>
         </ThemeProvider>
