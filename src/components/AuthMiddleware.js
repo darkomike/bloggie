@@ -66,9 +66,9 @@ export default function AuthMiddleware({ children }) {
   }, [user, loading, pathname, router, routeType]);
 
   // Show loading screen while checking auth
-  if (loading) {
-    return <LoadingScreen />;
-  }
+  // if (loading) {
+  //   return <LoadingScreen />;
+  // }
 
   return <>{children}</>;
 }
