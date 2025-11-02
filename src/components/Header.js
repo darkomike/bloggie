@@ -22,10 +22,11 @@ export default function Header() {
 
   const handleSignOut = async () => {
     try {
+      // Redirect first to homepage
+      router.push('/');
+      // Then sign out
       await signOut();
       setUserMenuOpen(false);
-      // Redirect to homepage after sign out
-      router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);
     }

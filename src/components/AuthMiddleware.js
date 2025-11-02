@@ -67,8 +67,7 @@ export default function AuthMiddleware({ children }) {
 
   // Show loading screen while checking auth
   if (loading) {
-    // return <LoadingScreen />;
-    <></>
+    return <LoadingScreen />;
   }
 
   return <>{children}</>;
