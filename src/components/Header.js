@@ -88,18 +88,6 @@ export default function Header() {
               Categories
             </Link>
 
-            {/* New Post Button (visible when logged in) */}
-            {user && (
-              <Link
-                href="/blog/new"
-                className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 flex items-center gap-2"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                New Post
-              </Link>
-            )}
           </div>
 
           {/* Right Side: Search, Theme Toggle & Auth */}
@@ -107,6 +95,20 @@ export default function Header() {
             <div className="flex items-center gap-8">
               <SearchBar />
               <ThemeToggle />
+              
+              {/* New Post Button (icon only, visible when logged in) */}
+              {user && (
+                <Link
+                  href="/blog/new"
+                  className="inline-flex items-center justify-center rounded-lg p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
+                  aria-label="Create new post"
+                  title="Create new post"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </Link>
+              )}
             </div>
 
             {/* Auth Container - Always render user profile, hide sign in/up when logged in */}
