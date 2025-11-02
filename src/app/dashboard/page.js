@@ -513,21 +513,21 @@ export default function DashboardPage() {
   }, [user]);
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Please sign in to view your dashboard
-          </h2>
-          <a
-            href="/login"
-            className="text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Go to Login
-          </a>
-        </div>
-      </div>
-    );
+    // return (
+    //   <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+    //     <div className="text-center">
+    //       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+    //         Please sign in to view your dashboard
+    //       </h2>
+    //       <a
+    //         href="/login"
+    //         className="text-blue-600 dark:text-blue-400 hover:underline"
+    //       >
+    //         Go to Login
+    //       </a>
+    //     </div>
+    //   </div>
+    // );
   }
 
   return (

@@ -5,15 +5,13 @@ import { format } from 'date-fns';
 export default function BlogCard({ post }) {
   return (
     <article className="group h-full flex flex-col overflow-hidden rounded-lg sm:rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 transition-all duration-300 hover:border-blue-300 dark:hover:border-blue-600">
-            {/* Cover Image */}
+      {/* Cover Image */}
       <div className="relative h-40 sm:h-48 md:h-52 w-full overflow-hidden bg-gray-100 dark:bg-gray-700">
         {post.coverImage ? (
           <Image
             src={post.coverImage}
             alt={post.title}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 100vw"
-            loading="lazy"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -62,8 +60,6 @@ export default function BlogCard({ post }) {
                   src={post.author.avatar}
                   alt={post.author.name}
                   fill
-                  sizes="32px"
-                  loading="lazy"
                   className="object-cover"
                 />
               </div>

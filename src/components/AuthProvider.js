@@ -99,12 +99,7 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     if (!auth) throw new Error('Firebase Auth is not configured');
-    try {
-      await firebaseSignOut(auth);
-    } catch (error) {
-      console.error('Sign out error:', error);
-      throw error;
-    }
+    return firebaseSignOut(auth);
   };
 
   const value = useMemo(

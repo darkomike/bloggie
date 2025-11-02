@@ -1,19 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { blogService } from '@/lib/firebase/blog-service';
 import { userService } from '@/lib/firebase/user-service';
-
-// Utility to debounce function calls
-const debounce = (func, delay) => {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
-};
 
 export default function SearchBar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,81 +14,61 @@ export default function SearchBar() {
   const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef(null);
   const inputRef = useRef(null);
-  const debouncedSearchRef = useRef(null);
-  const cachedDataRef = useRef({ posts: null, users: null, lastFetch: 0 });
 
-  // Initialize debounced search function
-  useEffect(() => {
-    const handleSearch = async (value) => {
-      if (value.trim().length === 0) {
-        setSearchResults([]);
-        setAuthorResults([]);
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        // Cache results for 30 seconds to avoid redundant fetches
-        const now = Date.now();
-        const needsRefresh = now - cachedDataRef.current.lastFetch > 30000;
-
-        if (!cachedDataRef.current.posts || needsRefresh) {
-          cachedDataRef.current.posts = await blogService.getAllPosts();
-          cachedDataRef.current.users = await userService.getAllUsers();
-          cachedDataRef.current.lastFetch = now;
-        }
-
-        const allPosts = cachedDataRef.current.posts || [];
-        const allUsers = cachedDataRef.current.users || [];
-        const query = value.toLowerCase();
-        
-        // Filter posts
-        const filtered = allPosts.filter(post => {
-          const titleMatch = post.title?.toLowerCase().includes(query);
-          const descriptionMatch = post.description?.toLowerCase().includes(query);
-          const contentMatch = post.content?.toLowerCase().includes(query);
-          const categoryMatch = post.category?.toLowerCase().includes(query);
-          
-          const authorMatch = 
-            post.author?.name?.toLowerCase().includes(query) ||
-            post.author?.username?.toLowerCase().includes(query) ||
-            post.author?.email?.toLowerCase().includes(query);
-          
-          const tagsMatch = post.tags?.some(tag => tag.toLowerCase().includes(query));
-          
-          return titleMatch || descriptionMatch || contentMatch || categoryMatch || authorMatch || tagsMatch;
-        });
-
-        // Filter authors
-        const authors = allUsers.filter(user => {
-          const nameMatch = user.displayName?.toLowerCase().includes(query);
-          const usernameMatch = user.username?.toLowerCase().includes(query);
-          const emailMatch = user.email?.toLowerCase().includes(query);
-          return nameMatch || usernameMatch || emailMatch;
-        }).slice(0, 5);
-
-        setSearchResults(filtered.slice(0, 8));
-        setAuthorResults(authors);
-      } catch (error) {
-        console.error('Search error:', error);
-        setSearchResults([]);
-        setAuthorResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Create debounced version (300ms delay for optimal UX)
-    debouncedSearchRef.current = debounce(handleSearch, 300);
-  }, []);
-
-  // Handle search with debouncing
-  const handleSearchInput = useCallback((value) => {
+  // Fetch and filter posts and authors based on search query
+  const handleSearch = async (value) => {
     setSearchQuery(value);
-    if (debouncedSearchRef.current) {
-      debouncedSearchRef.current(value);
+
+    if (value.trim().length === 0) {
+      setSearchResults([]);
+      setAuthorResults([]);
+      return;
     }
-  }, []);
+
+    setIsLoading(true);
+    try {
+      const allPosts = await blogService.getAllPosts();
+      const allUsers = await userService.getAllUsers();
+      const query = value.toLowerCase();
+      
+      // Filter posts
+      const filtered = allPosts.filter(post => {
+        // Search in title, description, content, and category
+        const titleMatch = post.title.toLowerCase().includes(query);
+        const descriptionMatch = post.description?.toLowerCase().includes(query);
+        const contentMatch = post.content?.toLowerCase().includes(query);
+        const categoryMatch = post.category?.toLowerCase().includes(query);
+        
+        // Search in author name and email
+        const authorMatch = 
+          post.author?.name?.toLowerCase().includes(query) ||
+          post.author?.username?.toLowerCase().includes(query) ||
+          post.author?.email?.toLowerCase().includes(query);
+        
+        // Search in tags
+        const tagsMatch = post.tags?.some(tag => tag.toLowerCase().includes(query));
+        
+        return titleMatch || descriptionMatch || contentMatch || categoryMatch || authorMatch || tagsMatch;
+      });
+
+      // Filter authors
+      const authors = allUsers.filter(user => {
+        const nameMatch = user.displayName?.toLowerCase().includes(query);
+        const usernameMatch = user.username?.toLowerCase().includes(query);
+        const emailMatch = user.email?.toLowerCase().includes(query);
+        return nameMatch || usernameMatch || emailMatch;
+      }).slice(0, 5); // Limit to 5 authors
+
+      setSearchResults(filtered.slice(0, 8));
+      setAuthorResults(authors);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+      setAuthorResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Close search when clicking outside
   useEffect(() => {
@@ -146,7 +117,7 @@ export default function SearchBar() {
           type="text"
           placeholder="Search posts..."
           value={searchQuery}
-          onChange={(e) => handleSearchInput(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           onFocus={() => setIsOpen(true)}
           className="w-full sm:w-64 px-4 py-2 pl-10 pr-10 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
         />
