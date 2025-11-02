@@ -9,6 +9,7 @@ import { likeService } from '@/lib/firebase/like-service';
 import { viewService } from '@/lib/firebase/view-service';
 import Link from 'next/link';
 import CacheDebugPanel from '@/components/CacheDebugPanel';
+import CacheStatsPanel from '@/components/CacheStatsPanel';
 import {
   BarChart,
   Bar,
@@ -532,6 +533,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <CacheDebugPanel />
+      <CacheStatsPanel />
       {/* Header */}
       <div className="bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 py-12 sm:py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

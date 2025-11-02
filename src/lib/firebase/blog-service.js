@@ -116,20 +116,25 @@ export const blogService = {
     }
 
     console.log(`📦 [BlogService Cache] ❌ Cache miss for ID: ${id}, fetching from Firebase...`);
-    if (!checkFirestore()) return null;
-    const docRef = doc(db, POSTS_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) {
-      return null;
-    }
-    const post = PostModel.fromFirestore({ id: docSnap.id, ...docSnap.data() });
-    post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
-    post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
     
-    console.log(`📦 [BlogService Cache] ✅ Fetched post "${post.title}", now caching...`);
-    // Cache the result
-    cacheManager.set('POSTS', `id_${id}`, post, CACHE_CONFIG.POSTS.POST_BY_ID);
-    return post;
+    // Use request coalescing to prevent duplicate simultaneous queries
+    const cacheKey = `POSTS:id_${id}`;
+    return cacheManager.getWithCoalescing(cacheKey, async () => {
+      if (!checkFirestore()) return null;
+      const docRef = doc(db, POSTS_COLLECTION, id);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        return null;
+      }
+      const post = PostModel.fromFirestore({ id: docSnap.id, ...docSnap.data() });
+      post.createdAt = TimeUtil.parseFirebaseTime(post.createdAt);
+      post.updatedAt = TimeUtil.parseFirebaseTime(post.updatedAt);
+      
+      console.log(`📦 [BlogService Cache] ✅ Fetched post "${post.title}", now caching...`);
+      // Cache the result
+      cacheManager.set('POSTS', `id_${id}`, post, CACHE_CONFIG.POSTS.POST_BY_ID);
+      return post;
+    });
   },
 
   // Helper to get posts by field

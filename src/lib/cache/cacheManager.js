@@ -8,6 +8,15 @@ class CacheManager {
   constructor() {
     this.cache = new Map();
     this.timers = new Map();
+    this.pendingRequests = new Map(); // For request coalescing
+    this.stats = {
+      hits: 0,
+      misses: 0,
+      sets: 0,
+      deletes: 0,
+      clears: 0,
+      startTime: Date.now(),
+    };
   }
 
   /**
@@ -42,6 +51,9 @@ class CacheManager {
       timestamp: Date.now(),
       ttl,
     });
+
+    // Track stats
+    this.stats.sets++;
 
     // Set expiration timer if TTL is specified
     if (ttl > 0) {
@@ -78,6 +90,7 @@ class CacheManager {
     const cached = this.cache.get(cacheKey);
 
     if (!cached) {
+      this.stats.misses++;
       const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
       if (shouldLog) {
         console.log(`❌ [Cache] Miss: ${cacheKey}`);
@@ -98,10 +111,12 @@ class CacheManager {
         if (process.env.NODE_ENV === 'development') {
           console.log(`⏰ [Cache] Expired: ${cacheKey}`);
         }
+        this.stats.misses++;
         return null;
       }
     }
 
+    this.stats.hits++;
     const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
     if (shouldLog) {
       console.log(`🎯 [Cache] Hit: ${cacheKey}`);
@@ -138,6 +153,8 @@ class CacheManager {
       this.timers.delete(cacheKey);
     }
 
+    this.stats.deletes++;
+
     const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
     if (shouldLog) {
       console.log(`🗑️  [Cache] Deleted: ${cacheKey}`);
@@ -165,6 +182,8 @@ class CacheManager {
       }
     });
 
+    this.stats.clears++;
+
     const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
     if (shouldLog) {
       console.log(`🗑️  [Cache] Cleared namespace: ${namespace} (${keysToDelete.length} entries)`);
@@ -188,6 +207,8 @@ class CacheManager {
     this.cache.clear();
     this.timers.clear();
 
+    this.stats.clears++;
+
     const shouldLog = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_CACHE_DEBUG === 'true';
     if (shouldLog) {
       console.log(`🗑️  [Cache] Cleared all cache`);
@@ -204,8 +225,20 @@ class CacheManager {
    * @returns {object} Cache statistics
    */
   getStats() {
+    const totalRequests = this.stats.hits + this.stats.misses;
+    const hitRatio = totalRequests > 0 ? ((this.stats.hits / totalRequests) * 100).toFixed(2) : 0;
+    const uptime = Date.now() - this.stats.startTime;
+    
     return {
       totalEntries: this.cache.size,
+      hits: this.stats.hits,
+      misses: this.stats.misses,
+      totalRequests,
+      hitRatio: `${hitRatio}%`,
+      sets: this.stats.sets,
+      deletes: this.stats.deletes,
+      clears: this.stats.clears,
+      uptime: `${(uptime / 1000).toFixed(2)}s`,
       entries: Array.from(this.cache.entries()).map(([key, data]) => ({
         key,
         timestamp: new Date(data.timestamp).toISOString(),
@@ -213,6 +246,39 @@ class CacheManager {
         age: Date.now() - data.timestamp,
       })),
     };
+  }
+
+  /**
+   * Request coalescing: prevents duplicate simultaneous requests for the same cache key
+   * If a request is already pending for this key, returns the same promise
+   * @param {string} cacheKey - The cache key being requested
+   * @param {Function} fetchFn - Async function that returns the data
+   * @returns {Promise} Result from cache or pending request
+   */
+  async getWithCoalescing(cacheKey, fetchFn) {
+    // Check if already in cache
+    const cached = this.cache.get(cacheKey);
+    if (cached && (!cached.ttl || Date.now() - cached.timestamp <= cached.ttl)) {
+      return cached.value;
+    }
+
+    // Check if request is already pending
+    if (this.pendingRequests.has(cacheKey)) {
+      return this.pendingRequests.get(cacheKey);
+    }
+
+    // Create new promise for this request
+    const promise = fetchFn();
+    this.pendingRequests.set(cacheKey, promise);
+
+    try {
+      const result = await promise;
+      this.pendingRequests.delete(cacheKey);
+      return result;
+    } catch (error) {
+      this.pendingRequests.delete(cacheKey);
+      throw error;
+    }
   }
 }
 
