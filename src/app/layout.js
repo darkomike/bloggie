@@ -6,6 +6,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import AuthMiddleware from "@/components/AuthMiddleware";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,6 +78,7 @@ export default function RootLayout({ children }) {
               </main>
               <Footer />
               <ScrollToTop />
+              <SpeedInsights />
             </AuthMiddleware>
           </AuthProvider>
         </ThemeProvider>
