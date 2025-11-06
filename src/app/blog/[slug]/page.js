@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { blogService } from '@/lib/firebase/blog-service';
 import { viewService } from '@/lib/firebase/view-service';
 import { likeService } from '@/lib/firebase/like-service';
@@ -10,6 +10,7 @@ import { shareService } from '@/lib/firebase/share-service';
 import { useAuth } from '@/components/AuthProvider';
 import FollowButton from '@/components/FollowButton';
 import CacheDebugPanel from '@/components/CacheDebugPanel';
+import NetworkErrorScreen from '@/components/NetworkErrorScreen';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -79,6 +80,35 @@ CodeBlock.propTypes = {
   inline: PropTypes.bool,
   className: PropTypes.string,
   children: PropTypes.node,
+};
+
+const isOfflineFirestoreError = (error) => {
+  if (!error) return false;
+  if (error.code === 'unavailable') {
+    return true;
+  }
+
+  const message = typeof error.message === 'string'
+    ? error.message.toLowerCase()
+    : '';
+
+  if (!message) {
+    return false;
+  }
+
+  if (message.includes('could not reach cloud firestore backend')) {
+    return true;
+  }
+
+  if (message.includes('client is offline') && message.includes('firestore')) {
+    return true;
+  }
+
+  if (message.includes('failed to get document') && message.includes('offline')) {
+    return true;
+  }
+
+  return false;
 };
 
 // Custom Heading Component to add IDs for TOC scrolling
@@ -232,65 +262,49 @@ const TableOfContents = ({ content }) => {
   if (headings.length === 0) return null;
 
   return (
-    <div className="bg-linear-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4 space-y-3">
-      <div className="flex items-center gap-2">
-        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-        <h4 className="font-bold text-sm md:text-base text-gray-900 dark:text-white">On this page</h4>
-      </div>
-      <nav>
-        <ul className="space-y-1.5 text-xs md:text-sm max-h-96 overflow-y-auto">
-          {headings.map((heading) => {
-            const isH2 = heading.level === 2;
-            const isH3 = heading.level === 3;
-            const isH4 = heading.level === 4;
-            
-            // Calculate indent based on heading level
-            let paddingLeft = 'pl-0';
-            if (isH3) paddingLeft = 'pl-3';
-            else if (isH4) paddingLeft = 'pl-6';
-            else if (heading.level > 4) paddingLeft = 'pl-9';
-            
-            const isActive = activeId === heading.id;
-            
-            return (
-              <li 
-                key={heading.id}
-                className={`${paddingLeft} transition-all duration-150`}
+    <nav className="space-y-1">
+      <h4 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4 px-3">
+        Table of Contents
+      </h4>
+      <ul className="space-y-1 text-sm border-l-2 border-gray-200 dark:border-gray-700">
+        {headings.map((heading) => {
+          const isActive = activeId === heading.id;
+          
+          // Calculate indent based on heading level
+          let paddingLeft = 'pl-3';
+          if (heading.level === 3) paddingLeft = 'pl-6';
+          else if (heading.level === 4) paddingLeft = 'pl-9';
+          else if (heading.level > 4) paddingLeft = 'pl-12';
+          
+          return (
+            <li key={heading.id}>
+              <a
+                href={`#${heading.id}`}
+                className={`block py-1.5 ${paddingLeft} border-l-2 -ml-[2px] transition-all duration-200 ${
+                  isActive
+                    ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 font-medium bg-blue-50/50 dark:bg-blue-900/10'
+                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const element = document.getElementById(heading.id);
+                  if (element) {
+                    element.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start'
+                    });
+                    setActiveId(heading.id);
+                  }
+                }}
+                title={heading.text}
               >
-                <a
-                  href={`#${heading.id}`}
-                  className={`block py-1.5 px-2 rounded transition-all duration-200 line-clamp-2 ${
-                    isActive
-                      ? 'text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 font-medium'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
-                  }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const element = document.getElementById(heading.id);
-                    if (element) {
-                      element.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                      });
-                      // Manually set active after clicking
-                      setActiveId(heading.id);
-                    }
-                  }}
-                  title={heading.text}
-                >
-                  {heading.text}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-      <div className="pt-2 text-xs text-gray-500 dark:text-gray-500 border-t border-gray-200 dark:border-gray-700">
-        {headings.length} {headings.length === 1 ? 'section' : 'sections'}
-      </div>
-    </div>
+                {heading.text}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 };
 
@@ -367,7 +381,7 @@ SocialShareButtons.propTypes = {
 };
 
 // Floating Action Buttons
-const FloatingActions = ({ userLiked, likesCount, onLike, onShare, onScrollToTop }) => {
+const FloatingActions = ({ userLiked, likesCount, onLike, onShare, onScrollToTop, onToggleTOC, forceShowTOCButton = false }) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -380,46 +394,76 @@ const FloatingActions = ({ userLiked, likesCount, onLike, onShare, onScrollToTop
   }, []);
 
   return (
-    <div className="fixed right-6 bottom-6 flex flex-col gap-3 z-40">
+    <div className="fixed right-4 sm:right-6 bottom-6 flex flex-col gap-2 z-40">
+      {/* Table of Contents - Mobile Only */}
       <button
-        onClick={onLike}
-        className={`p-3 rounded-full shadow-lg transition-all transform hover:scale-110 relative ${
-          userLiked 
-            ? 'bg-red-500 text-white' 
-            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600'
-        }`}
-        aria-label={userLiked ? 'Unlike this post' : 'Like this post'}
+        onClick={onToggleTOC}
+  className={`${forceShowTOCButton ? '' : 'md:hidden'} p-3 rounded-full shadow-lg bg-linear-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white transition-all transform hover:scale-110 active:scale-95`}
+        aria-label="Toggle table of contents"
+        title="On this page"
       >
-        <svg className="h-6 w-6" fill={userLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-        {likesCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {likesCount}
-          </span>
-        )}
-      </button>
-
-      <button
-        onClick={onShare}
-        className="p-3 rounded-full shadow-lg bg-blue-500 text-white transition-all transform hover:scale-110"
-        aria-label="Share this post"
-      >
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
         </svg>
       </button>
 
-      {showScrollTop && (
+      {/* Like Button */}
+      <div className="group relative">
         <button
-          onClick={onScrollToTop}
-          className="p-3 rounded-full shadow-lg bg-gray-600 text-white transition-all transform hover:scale-110"
-          aria-label="Scroll to top"
+          onClick={onLike}
+          className={`p-3 rounded-full shadow-lg transition-all transform hover:scale-110 active:scale-95 relative group-hover:shadow-xl ${
+            userLiked 
+              ? 'bg-linear-to-br from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white' 
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+          }`}
+          aria-label={userLiked ? 'Unlike this post' : 'Like this post'}
         >
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          <svg className="h-5 w-5" fill={userLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+          {likesCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-linear-to-br from-rose-500 to-rose-600 text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center shadow-md">
+              {likesCount > 99 ? '99+' : likesCount}
+            </span>
+          )}
+        </button>
+        <span className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          {userLiked ? 'Liked' : 'Like'}
+        </span>
+      </div>
+
+      {/* Share Button */}
+      <div className="group relative">
+        <button
+          onClick={onShare}
+          className="p-3 rounded-full shadow-lg bg-linear-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white transition-all transform hover:scale-110 active:scale-95 group-hover:shadow-xl"
+          aria-label="Share this post"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
         </button>
+        <span className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          Share
+        </span>
+      </div>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <div className="group relative animate-in fade-in zoom-in-50 duration-300">
+          <button
+            onClick={onScrollToTop}
+            className="p-3 rounded-full shadow-lg bg-linear-to-br from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 text-white transition-all transform hover:scale-110 active:scale-95 group-hover:shadow-xl"
+            aria-label="Scroll to top"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+            </svg>
+          </button>
+          <span className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            Top
+          </span>
+        </div>
       )}
     </div>
   );
@@ -431,6 +475,8 @@ FloatingActions.propTypes = {
   onLike: PropTypes.func.isRequired,
   onShare: PropTypes.func.isRequired,
   onScrollToTop: PropTypes.func.isRequired,
+  onToggleTOC: PropTypes.func.isRequired,
+  forceShowTOCButton: PropTypes.bool,
 };
 
 export default function BlogPostPage() {
@@ -543,14 +589,58 @@ export default function BlogPostPage() {
   const [viewsCount, setViewsCount] = useState(null);
   const [shareLink, setShareLink] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showMobileTOC, setShowMobileTOC] = useState(false);
+  const [isTOCVisible, setIsTOCVisible] = useState(false);
+  const [networkError, setNetworkError] = useState(null);
+  const [retryToken, setRetryToken] = useState(0);
+  const tocRef = useRef(null);
+
+  const handleRetry = useCallback(() => {
+    setRetryToken((prev) => prev + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!tocRef.current) {
+      setIsTOCVisible(false);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsTOCVisible(entry.isIntersecting);
+      },
+      {
+        root: null,
+        threshold: 0.1,
+        rootMargin: '-120px 0px -40% 0px',
+      }
+    );
+
+    observer.observe(tocRef.current);
+
+    return () => observer.disconnect();
+  }, [post?.content]);
+
+  const handleToggleTOCVisibility = () => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      tocRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      setShowMobileTOC((prev) => !prev);
+    }
+  };
 
   useEffect(() => {
     const fetchPost = async () => {
+      setNetworkError(null);
+      setNotFound(false);
+      setLoading(true);
+
       if (!slug) {
         setNotFound(true);
         setLoading(false);
         return;
       }
+
       try {
         // First try to get published post by slug
         let postData = await blogService.getPostBySlug(slug);
@@ -567,16 +657,30 @@ export default function BlogPostPage() {
           setLoading(false);
           return;
         }
+
         setPost({
           ...postData,
           createdAt: postData.createdAt?.toISOString?.() || new Date().toISOString(),
           updatedAt: postData.updatedAt?.toISOString?.() || new Date().toISOString(),
         });
-        fetchComments(postData.id);
-        fetchEngagementCounts(postData.id);
+
+        await Promise.all([
+          fetchComments(postData.id),
+          fetchEngagementCounts(postData.id),
+        ]);
       } catch (error) {
         console.error('Error fetching blog post:', error);
-        setNotFound(true);
+
+        if (isOfflineFirestoreError(error)) {
+          setNetworkError({
+            title: 'You appear to be offline',
+            message: 'We could not reach the blog data. Check your connection and try again.',
+            details: error.message,
+          });
+          setNotFound(false);
+        } else {
+          setNotFound(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -593,6 +697,13 @@ export default function BlogPostPage() {
         setComments(commentsData.map((data) => new Comment(data)) || []);
       } catch (error) {
         console.error('Error fetching comments:', error);
+        if (isOfflineFirestoreError(error)) {
+          setNetworkError((current) => current || {
+            title: 'You appear to be offline',
+            message: 'We could not load comments because the connection dropped.',
+            details: error.message,
+          });
+        }
         setComments([]);
       } finally {
         setCommentsLoading(false);
@@ -620,11 +731,18 @@ export default function BlogPostPage() {
         setCommentsCount(commentsData.length);
       } catch (error) {
         console.error('Error fetching engagement counts:', error);
+        if (isOfflineFirestoreError(error)) {
+          setNetworkError((current) => current || {
+            title: 'You appear to be offline',
+            message: 'We could not update engagement stats. Please retry once you are reconnected.',
+            details: error.message,
+          });
+        }
       }
     };
 
     fetchPost();
-  }, [slug, user?.uid]);
+  }, [slug, user?.uid, retryToken]);
 
   useEffect(() => {
     if (!post?.id) return;
@@ -671,6 +789,17 @@ export default function BlogPostPage() {
     );
   }
 
+  if (networkError) {
+    return (
+      <NetworkErrorScreen
+        title={networkError.title}
+        message={networkError.message}
+        details={networkError.details}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   if (notFound || !post) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
@@ -699,11 +828,13 @@ export default function BlogPostPage() {
         onLike={handleLike}
         onShare={handleEnhancedShare}
         onScrollToTop={handleScrollToTop}
+        onToggleTOC={handleToggleTOCVisibility}
+        forceShowTOCButton={!isTOCVisible}
       />
 
       <article className="min-h-screen bg-white dark:bg-gray-900">
         {post.coverImage && (
-          <div className="relative w-full h-48 sm:h-72 md:h-96 lg:h-[28rem] xl:h-[32rem]">
+          <div className="relative w-full h-48 sm:h-72 md:h-96 lg:h-112 xl:h-128">
             <Image
               src={post.coverImage}
               alt={post.title}
@@ -743,7 +874,7 @@ export default function BlogPostPage() {
           </div>
         )}
 
-        <div className="mx-auto max-w-4xl px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10 md:py-12 lg:py-16">
+        <div className="w-full px-6 sm:px-8 md:px-10 lg:px-16 py-8 sm:py-10 md:py-12 lg:py-16">
           {!post.coverImage && (
             <div className="mb-8 sm:mb-10 md:mb-12">
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-5">
@@ -838,59 +969,84 @@ export default function BlogPostPage() {
             </div>
           </div>
 
-          <div className="relative grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
-            {/* Main Content */}
-            <div className="lg:col-span-3">
-              <div className="max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={remarkPlugins}
-                  components={{
-                    ...fullMarkdownComponents,
-                    h1: ({ children }) => <CustomHeading level={1}>{children}</CustomHeading>,
-                    h2: ({ children }) => <CustomHeading level={2}>{children}</CustomHeading>,
-                    h3: ({ children }) => <CustomHeading level={3}>{children}</CustomHeading>,
-                    h4: ({ children }) => <CustomHeading level={4}>{children}</CustomHeading>,
-                    h5: ({ children }) => <CustomHeading level={5}>{children}</CustomHeading>,
-                    h6: ({ children }) => <CustomHeading level={6}>{children}</CustomHeading>,
-                  }}
-                >
-                  {post.content}
-                </ReactMarkdown>
-              </div>
-            </div>
+          {/* Professional Documentation Layout */}
+          <div className="w-full bg-white dark:bg-gray-900">
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+              <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-12 lg:gap-16">
 
-            {/* Table of Contents Sidebar */}
-            {post?.content && (
-              <div className="hidden lg:block lg:col-span-1">
-                <div className="sticky top-24">
-                  <TableOfContents content={post.content} />
-                </div>
-              </div>
-            )}
-          </div>
+                {/* Left Sidebar - Table of Contents */}
+                {post?.content && (
+                  <aside ref={tocRef} className="hidden lg:block sticky top-24 self-start">
+                    <div className="max-h-[calc(100vh-8rem)] overflow-y-auto pr-4
+                      scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4 px-1">
+                        On This Page
+                      </h3>
+                      <TableOfContents content={post.content} />
+                    </div>
+                  </aside>
+                )}
 
-          <div className="mt-10 sm:mt-12 md:mt-16 pt-6 sm:pt-8 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-8 sm:mb-10">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                {/* Main Content Area */}
+                <div className="min-w-0">
+                  <article>
+                    <div className="prose prose-gray dark:prose-invert prose-lg max-w-none
+                      prose-headings:scroll-mt-24 prose-headings:font-bold
+                      prose-h1:text-4xl prose-h1:mb-4 prose-h1:mt-8 first:prose-h1:mt-0
+                      prose-h2:text-3xl prose-h2:mb-3 prose-h2:mt-10 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-200 dark:prose-h2:border-gray-800
+                      prose-h3:text-2xl prose-h3:mb-3 prose-h3:mt-8
+                      prose-h4:text-xl prose-h4:mb-2 prose-h4:mt-6
+                      prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:leading-relaxed
+                      prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
+                      prose-code:text-sm prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+                      prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700
+                      prose-img:rounded-lg prose-img:shadow-lg
+                      prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-900/10 prose-blockquote:py-1 prose-blockquote:px-4
+                      prose-li:text-gray-700 dark:prose-li:text-gray-300
+                      prose-strong:text-gray-900 dark:prose-strong:text-gray-100
+                      prose-table:text-sm"
+                    >
+                      <ReactMarkdown
+                        remarkPlugins={remarkPlugins}
+                        components={{
+                          ...fullMarkdownComponents,
+                          h1: ({ children }) => <CustomHeading level={1}>{children}</CustomHeading>,
+                          h2: ({ children }) => <CustomHeading level={2}>{children}</CustomHeading>,
+                          h3: ({ children }) => <CustomHeading level={3}>{children}</CustomHeading>,
+                          h4: ({ children }) => <CustomHeading level={4}>{children}</CustomHeading>,
+                          h5: ({ children }) => <CustomHeading level={5}>{children}</CustomHeading>,
+                          h6: ({ children }) => <CustomHeading level={6}>{children}</CustomHeading>,
+                        }}
+                      >
+                        {post.content}
+                      </ReactMarkdown>
+                    </div>
+                  </article>
+
+                  {/* Engagement & Comments Section */}
+                  <div className="mt-12">
+                    <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-8 sm:mb-10">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button
-                  className={`flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${userLiked ? 'bg-red-600 text-white hover:bg-red-700 shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                  className={`flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${userLiked ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/50' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                   onClick={handleLike}
                   aria-label={userLiked ? 'Unlike this post' : 'Like this post'}
                 >
-                  <svg className="h-4 w-4 sm:h-5 sm:w-5" fill={userLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  <svg className="h-5 w-5 sm:h-6 sm:w-6" fill={userLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
-                  <span className="text-xs hidden sm:inline">{likesCount || 0}</span>
+                  <span className="text-xs hidden sm:inline font-medium">{likesCount || 0}</span>
                 </button>
                 <button
-                  className="flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 font-semibold text-sm sm:text-base"
+                  className="flex items-center gap-2 px-3 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 font-semibold text-sm sm:text-base"
                   onClick={handleEnhancedShare}
                   aria-label="Share this post"
                 >
-                  <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
-                  <span className="text-xs hidden sm:inline">{sharesCount || 0}</span>
+                  <span className="text-xs hidden sm:inline font-medium">{sharesCount || 0}</span>
                 </button>
               </div>
 
@@ -1092,8 +1248,49 @@ export default function BlogPostPage() {
               Back to Blog
             </Link>
           </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </article>
+
+      {/* Mobile Table of Contents Drawer */}
+      {showMobileTOC && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <button
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowMobileTOC(false)}
+            onKeyDown={(e) => e.key === 'Escape' && setShowMobileTOC(false)}
+            aria-label="Close drawer"
+            type="button"
+          />
+          
+          {/* Slide-in Drawer */}
+          <div className="absolute right-0 top-0 bottom-0 w-72 bg-white dark:bg-gray-900 shadow-2xl flex flex-col animate-in slide-in-from-right-80 duration-300">
+            {/* Header */}
+            <div className="shrink-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">On this page</h3>
+              <button
+                onClick={() => setShowMobileTOC(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Close table of contents"
+              >
+                <svg className="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-4 py-6">
+              {post?.content && <TableOfContents content={post.content} />}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

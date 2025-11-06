@@ -14,7 +14,7 @@ import ReactMarkdown from 'react-markdown';
 import { previewMarkdownComponents, remarkPlugins } from '@/lib/markdown/markdownComponents';
 
 export default function NewBlogPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [userUsername, setUserUsername] = useState('');
   const [formData, setFormData] = useState({
@@ -130,6 +130,7 @@ export default function NewBlogPage() {
         setUploading(false);
       }
       // Create blog post using blogService
+      console.log('Creating post with user:', { user, uid: user?.uid, email: user?.email });
       const blogPost = {
         title: formData.title,
         slug: formData.slug,
@@ -150,6 +151,7 @@ export default function NewBlogPage() {
           username: userUsername || '',
         },
       };
+      console.log('Post object before sending to Firebase:', blogPost);
       await blogService.createPost(blogPost);
       // Redirect to the blog post or dashboard
       if (formData.published) {
@@ -165,19 +167,12 @@ export default function NewBlogPage() {
     }
   };
 
-  if (!user) {
+  if (!user || authLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Please sign in to create a blog post
-          </h2>
-          <a
-            href="/login"
-            className="text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Go to Login
-          </a>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading your session...</p>
         </div>
       </div>
     );

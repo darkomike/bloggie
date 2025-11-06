@@ -2,47 +2,67 @@ import { put, del } from '@vercel/blob';
 
 /**
  * Compress an image file before upload
- * @param {File} file - The image file to compress
- * @param {number} quality - Quality level (0-1), default 0.8
+ * @param {File|Blob} file - The image file to compress
+ * @param {Object} options
+ * @param {number} options.quality - Quality level (0-1)
+ * @param {number} options.maxWidth - Max width in pixels
+ * @param {number} options.maxHeight - Max height in pixels
+ * @param {string} options.mimeType - Target mime type
  * @returns {Promise<File>} - Compressed image file
  */
-async function compressImage(file, quality = 0.8) {
-  return new Promise((resolve) => {
+export async function compressImageFile(file, options = {}) {
+  const {
+    quality = 0.8,
+    maxWidth = 2000,
+    maxHeight = 2000,
+    mimeType,
+  } = options;
+
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
+    reader.onerror = (event) => {
+      reject(event.target?.error || new Error('Failed to read file for compression'));
+    };
     reader.readAsDataURL(file);
     reader.onload = (event) => {
       const img = new Image();
-      img.src = event.target.result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
         let { width, height } = img;
-        
-        // Scale down if image is too large
-        const maxWidth = 2000;
-        const maxHeight = 2000;
+
         if (width > maxWidth || height > maxHeight) {
           const ratio = Math.min(maxWidth / width, maxHeight / height);
-          width *= ratio;
-          height *= ratio;
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
         }
-        
+
         canvas.width = width;
         canvas.height = height;
+
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        
+
+        const targetMime = mimeType || (file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg');
+
         canvas.toBlob(
           (blob) => {
-            const compressedFile = new File([blob], file.name, { 
-              type: 'image/jpeg',
-              lastModified: Date.now()
+            if (!blob) {
+              reject(new Error('Unable to compress image'));
+              return;
+            }
+            const fileName = file.name || `compressed-${Date.now()}.jpg`;
+            const compressedFile = new File([blob], fileName, {
+              type: targetMime,
+              lastModified: Date.now(),
             });
             resolve(compressedFile);
           },
-          'image/jpeg',
+          targetMime,
           quality
         );
       };
+      img.onerror = () => reject(new Error('Unable to load image for compression'));
+      img.src = event.target.result;
     };
   });
 }
@@ -68,19 +88,19 @@ export async function uploadBlob(file, path) {
     if (file.type.startsWith('image/')) {
       if (file.size > MAX_FILE_SIZE) {
         console.log(`📦 Image ${file.name} is ${(file.size / 1024 / 1024).toFixed(2)}MB - compressing to <5MB...`);
-        fileToUpload = await compressImage(file, 0.6);
+        fileToUpload = await compressImageFile(file, { quality: 0.6 });
         
         // If still too large, compress more aggressively
         if (fileToUpload.size > MAX_FILE_SIZE) {
           console.log(`📦 Still large (${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB) - compressing further...`);
-          fileToUpload = await compressImage(fileToUpload, 0.4);
+          fileToUpload = await compressImageFile(fileToUpload, { quality: 0.4 });
         }
         
         console.log(`✅ Compressed to ${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB`);
       } else if (file.size > 1024 * 1024) {
         // Compress if over 1MB even if under max (for bandwidth optimization)
         console.log(`📦 Optimizing image ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)...`);
-        fileToUpload = await compressImage(file, 0.75);
+        fileToUpload = await compressImageFile(file, { quality: 0.75 });
         console.log(`✅ Optimized to ${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB`);
       }
     }
@@ -133,6 +153,12 @@ export async function deleteBlob(url) {
       throw new Error('No URL provided');
     }
 
+    // Skip deletion for data URLs or other non-http references
+    if (!/^https?:\/\//i.test(url)) {
+      console.warn('Skipping blob deletion for non-HTTP URL:', url.slice(0, 60));
+      return false;
+    }
+
     const response = await fetch('/api/upload', {
       method: 'DELETE',
       headers: {
@@ -172,7 +198,8 @@ export async function uploadBlogCover(file) {
  * @returns {Promise<string>} - The URL of the uploaded avatar
  */
 export async function uploadUserAvatar(file, userId) {
+  const timestamp = Date.now();
   const filename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-  const path = `avatars/${userId}/${filename}`;
+  const path = `avatars/${userId}/${timestamp}-${filename}`;
   return uploadBlob(file, path);
 }

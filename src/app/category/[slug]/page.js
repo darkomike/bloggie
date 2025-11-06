@@ -1,19 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
 import CacheDebugPanel from '@/components/CacheDebugPanel';
+import { blogService } from '@/lib/firebase/blog-service';
 
 export default function CategoryPage() {
   const params = useParams();
   const slug = params.slug;
-  
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  
   const categoryName = slug
     ? slug
         .split('-')
@@ -21,33 +21,28 @@ export default function CategoryPage() {
         .join(' ')
     : '';
 
+  // Fetch posts on mount
   useEffect(() => {
-    async function fetchCategoryPosts() {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const { blogService } = await import('@/lib/firebase/blog-service');
-        const allPosts = await blogService.getAllPosts();
-        
-        // Filter posts by category (single category per post now)
-        const filtered = allPosts.filter(
-          post => post.category && post.category.toLowerCase().replace(/\s+/g, '-') === slug
-        );
-        
-        setPosts(filtered);
-        setError(null);
+        const data = await blogService.getAllPosts();
+        setPosts(data);
       } catch (err) {
         console.error('Error fetching posts:', err);
-        setError('Failed to load posts');
-        setPosts([]);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    if (slug) {
-      fetchCategoryPosts();
-    }
-  }, [slug]);
+    fetchData();
+  }, []);
+
+  // Filter posts by category
+  const filteredPosts = posts.filter(
+    post => post.category && post.category.toLowerCase().replace(/\s+/g, '-') === slug
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
@@ -60,7 +55,7 @@ export default function CategoryPage() {
               {categoryName}
             </h1>
             <p className="text-lg sm:text-xl text-blue-100">
-              Explore {posts.length} article{posts.length !== 1 ? 's' : ''} in this category
+              Explore {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''} in this category
             </p>
           </div>
         </div>
@@ -81,7 +76,7 @@ export default function CategoryPage() {
                 Back to Categories
               </Link>
             </div>
-          ) : posts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <div className="text-center py-12">
               <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -98,7 +93,7 @@ export default function CategoryPage() {
             </div>
           ) : (
             <div className="grid gap-6 sm:gap-8">
-              {posts.map(post => (
+              {filteredPosts.map(post => (
                 <BlogCard key={post.id} post={post} />
               ))}
             </div>

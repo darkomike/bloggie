@@ -1,23 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { blogService } from '@/lib/firebase/blog-service';
 import BlogCard from '@/components/BlogCard';
 import Link from 'next/link';
 import CacheDebugPanel from '@/components/CacheDebugPanel';
+import { blogService } from '@/lib/firebase/blog-service';
 
 export default function BlogPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch posts on mount
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       try {
-        // Use blog service to fetch published posts
-        const postsData = await blogService.getAllPosts();
-        setPosts(postsData);
+        setLoading(true);
+        const data = await blogService.getAllPosts();
+        setPosts(data);
       } catch (err) {
         console.error('Error fetching posts:', err);
         setError(err.message);
@@ -26,7 +27,7 @@ export default function BlogPage() {
       }
     };
 
-    fetchPosts();
+    fetchData();
   }, []);
 
   // Get unique categories from posts that have at least one article

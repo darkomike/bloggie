@@ -5,11 +5,12 @@ A modern, clean, and professional blog web application built with Next.js 15, Fi
 ## 🚀 Features
 
 - **Modern Tech Stack**: Built with Next.js 15 (App Router), React 19, and JavaScript
-- **Firebase Backend**: Firestore for database, Authentication, and Storage
+- **Firebase Backend**: Firestore for database (NO Firebase Auth or Storage)
+- **Custom Authentication**: Server-side JWT-based authentication system
 - **Email Integration**: Resend for newsletter and contact form emails
 - **Responsive Design**: Mobile-first design with TailwindCSS
 - **SEO Optimized**: Server-side rendering for better SEO
-- **Clean Architecture**: Well-organized code structure following best practices
+- **Clean Architecture**: Well-organized code structure following SOLID principles
 
 ## 📁 Project Structure
 
@@ -49,11 +50,12 @@ bloggie/
 - **Language**: JavaScript (ES6+)
 - **Styling**: TailwindCSS with Typography plugin
 - **Database**: Firebase Firestore
-- **Authentication**: Firebase Auth
-- **Storage**: Firebase Storage
+- **Authentication**: Custom Server-Side JWT Authentication
+- **Storage**: Vercel Blob
 - **Email**: Resend
 - **Markdown**: React Markdown with Syntax Highlighting
 - **Date Handling**: date-fns
+- **State Management**: React Context API (built-in)
 
 ## 📋 Prerequisites
 
@@ -74,8 +76,6 @@ npm install
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Create a new project
 3. Enable Firestore Database
-4. Enable Authentication (Email/Password)
-5. Enable Storage
 
 ### 3. Resend Setup
 

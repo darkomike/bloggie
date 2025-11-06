@@ -40,6 +40,7 @@ export async function POST(request) {
     const blob = await put(path, buffer, {
       access: 'public',
       contentType: file.type,
+      addRandomSuffix: true, // Generate unique filename to avoid conflicts
     });
 
     console.log('Upload successful:', blob.url);
@@ -91,13 +92,14 @@ export async function DELETE(request) {
       );
     }
 
-    // Extract just the pathname for deletion
-    // URL format: https://xxxxx.public.blob.vercel-storage.com/path/to/file
-    // del() expects: path/to/file (without domain)
-    const urlObj = new URL(url);
-    const blobPath = urlObj.pathname.substring(1); // Remove leading slash
+    if (!/^https?:\/\//i.test(url)) {
+      return Response.json(
+        { error: 'Invalid blob URL provided' },
+        { status: 400 }
+      );
+    }
 
-    await del(blobPath);
+    await del(url);
 
     return Response.json({ success: true });
   } catch (error) {

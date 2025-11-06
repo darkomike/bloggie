@@ -5,7 +5,7 @@ export class Like {
   constructor({ id, postId, user, likedAt, createdAt, isGuest }) {
     this.id = id || null;
     this.postId = postId || null;
-    this.user = user || { id: null, name: 'Anonymous', email: null };
+    this.user = user || { id: null, name: 'Anonymous', email: null, username: null };
     this.likedAt = likedAt || new Date().toISOString();
     this.createdAt = createdAt || new Date().toISOString();
     this.isGuest = typeof isGuest === 'boolean' ? isGuest : false;

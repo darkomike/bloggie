@@ -1,114 +1,85 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  Timestamp,
-} from 'firebase/firestore';
-import { db } from './config';
-import { cacheManager } from '@/lib/cache/cacheManager';
+/**
+ * Share Service
+ * Handles share tracking operations with Firebase
+ * Extends BaseFirebaseService following SOLID principles
+ */
+
+import { where, Timestamp } from 'firebase/firestore';
+import { BaseFirebaseService } from './base-service';
 import { CACHE_CONFIG } from '@/lib/cache/cacheConfig';
 
 const SHARES_COLLECTION = 'shares';
 
-const checkFirestore = () => {
-  if (!db) {
-    console.warn('Firestore is not initialized. Returning empty data.');
-    return false;
+/**
+ * Transform function for share documents
+ */
+const transformShare = (data) => ({
+  id: data.id,
+  ...data,
+  createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+});
+
+class ShareService extends BaseFirebaseService {
+  constructor() {
+    super(SHARES_COLLECTION, 'SHARES', CACHE_CONFIG.SHARES);
   }
-  return true;
-};
 
-export const shareService = {
-  // Get all shares for a post
+  /**
+   * Get all shares for a post
+   */
   async getSharesByPost(postId) {
-    if (!checkFirestore()) return [];
-    
-    const cached = cacheManager.get('SHARES', `post_${postId}`);
-    if (cached) {
-      console.log('📦 [Shares Cache] Using cached shares for post:', postId);
-      return cached;
-    }
-    
-    console.log('📦 [Shares Cache] Cache miss for post:', postId);
-    
-    // Use request coalescing
-    const coalescingKey = `SHARES:post_${postId}`;
-    return cacheManager.getWithCoalescing(coalescingKey, async () => {
-      const constraints = [
-        where('postId', '==', postId),
-      ];
-      const q = query(collection(db, SHARES_COLLECTION), ...constraints);
-      const querySnapshot = await getDocs(q);
-      const shares = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-      }));
-      
-      cacheManager.set('SHARES', `post_${postId}`, shares, CACHE_CONFIG.SHARES.BY_POST);
-      return shares;
-    });
-  },
+    const cacheKey = `post_${postId}`;
+    const constraints = [where('postId', '==', postId)];
 
-  // Add a share
-  async addShare(share) {
-    if (!checkFirestore()) return null;
-    const docRef = await addDoc(collection(db, SHARES_COLLECTION), {
-      ...share,
+    return this.getAll(
+      constraints,
+      cacheKey,
+      CACHE_CONFIG.SHARES.BY_POST,
+      transformShare
+    );
+  }
+
+  /**
+   * Add a share
+   */
+  async addShare(shareData) {
+    if (!this.checkFirestore()) return null;
+
+    const data = {
+      ...shareData,
       createdAt: Timestamp.now(),
-    });
-    
-    // Invalidate cache
-    cacheManager.clearNamespace('SHARES');
-    
-    return docRef.id;
-  },
+    };
 
-  // Remove a share
+    const result = await this.create(data);
+
+    // Invalidate cache
+    this.invalidateCache();
+
+    return result.id;
+  }
+
+  /**
+   * Remove a share
+   */
   async removeShare(id) {
-    if (!checkFirestore()) return null;
-    const docRef = doc(db, SHARES_COLLECTION, id);
-    await deleteDoc(docRef);
-    
-    // Invalidate cache
-    cacheManager.clearNamespace('SHARES');
-  },
+    if (!this.checkFirestore()) return null;
 
-  // Get a single share by ID
+    await this.delete(id);
+
+    // Invalidate cache
+    this.invalidateCache();
+
+    return id;
+  }
+
+  /**
+   * Get share by ID
+   */
   async getShareById(id) {
-    if (!checkFirestore()) return null;
-    
-    const cached = cacheManager.get('SHARES', `id_${id}`);
-    if (cached) {
-      console.log('📦 [Shares Cache] Using cached share:', id);
-      return cached;
-    }
-    
-    console.log('📦 [Shares Cache] Cache miss for share:', id);
-    const coalescingKey = `SHARES:id_${id}`;
-    return cacheManager.getWithCoalescing(coalescingKey, async () => {
-      const docRef = doc(db, SHARES_COLLECTION, id);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        return null;
-      }
-      
-      const share = {
-        id: docSnap.id,
-        ...docSnap.data(),
-        createdAt: docSnap.data().createdAt?.toDate(),
-      };
-      
-      cacheManager.set('SHARES', `id_${id}`, share, CACHE_CONFIG.SHARES.BY_ID);
-      return share;
-    });
-  },
-};
+    const share = await this.getById(id, CACHE_CONFIG.SHARES.BY_ID);
+    return share ? transformShare(share) : null;
+  }
+}
+
+// Export singleton instance
+export const shareService = new ShareService();

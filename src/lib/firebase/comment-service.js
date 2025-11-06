@@ -1,128 +1,126 @@
+/**
+ * Comment Service
+ * Handles comment operations with Firebase
+ * Extends BaseFirebaseService following SOLID principles
+ */
+
 import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
   where,
   orderBy,
   limit,
 } from 'firebase/firestore';
-import { db } from './config';
+import { BaseFirebaseService } from './base-service';
 import { Comment } from '@/models/commentModel';
-import { cacheManager } from '@/lib/cache/cacheManager';
 import { CACHE_CONFIG } from '@/lib/cache/cacheConfig';
 
 const COMMENTS_COLLECTION = 'comments';
 
-const checkFirestore = () => {
-  if (!db) {
-    console.warn('Firestore is not initialized. Returning empty data.');
-    return false;
+/**
+ * Transform function for comment documents
+ */
+const transformComment = (data) => {
+  // Check if it's a Firestore document with .data() method
+  if (data && typeof data.data === 'function') {
+    return Comment.fromFirestore(data);
   }
-  return true;
+  
+  // Otherwise, it's already plain data from base-service
+  return new Comment({
+    id: data.id,
+    postId: data.postId,
+    user: data.user,
+    text: data.text,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  });
 };
 
-export const commentService = {
-  // Get all comments for a post
+class CommentService extends BaseFirebaseService {
+  constructor() {
+    super(COMMENTS_COLLECTION, 'COMMENTS', CACHE_CONFIG.COMMENTS);
+  }
+
+  /**
+   * Get all comments for a post
+   */
   async getCommentsByPost(postId, limitCount) {
-    if (!checkFirestore()) return [];
     if (!postId) {
       console.error('Invalid postId: undefined');
       return [];
     }
 
-    const cacheKey = `post_${postId}${limitCount ? `_limit_${limitCount}` : ''}`;
-    const cached = cacheManager.get('COMMENTS', cacheKey);
-    if (cached) {
-      console.log('📦 [Comments Cache] Using cached comments for post:', postId);
-      return cached;
+    const limitSuffix = limitCount ? `_limit_${limitCount}` : '';
+    const cacheKey = `post_${postId}${limitSuffix}`;
+    const constraints = [
+      where('postId', '==', postId),
+      orderBy('createdAt', 'desc'),
+    ];
+
+    if (limitCount) {
+      constraints.push(limit(limitCount));
     }
 
-    console.log('📦 [Comments Cache] Cache miss for post:', postId);
-    
-    // Use request coalescing
-    const coalescingKey = `COMMENTS:${cacheKey}`;
-    return cacheManager.getWithCoalescing(coalescingKey, async () => {
-      const constraints = [
-        where('postId', '==', postId),
-        orderBy('createdAt', 'desc'),
-      ];
-      if (limitCount) constraints.push(limit(limitCount));
-      const q = query(collection(db, COMMENTS_COLLECTION), ...constraints);
-      const querySnapshot = await getDocs(q);
-      const comments = querySnapshot.docs.map((doc) => Comment.fromFirestore(doc));
-      
-      cacheManager.set('COMMENTS', cacheKey, comments, CACHE_CONFIG.COMMENTS.BY_POST);
-      return comments;
-    });
-  },
+    return this.getAll(
+      constraints,
+      cacheKey,
+      CACHE_CONFIG.COMMENTS.BY_POST,
+      transformComment
+    );
+  }
 
-  // Add a new comment
-  async addComment(comment) {
-    if (!checkFirestore()) return null;
-    const commentModel = new Comment(comment);
-    const docRef = await addDoc(collection(db, COMMENTS_COLLECTION), commentModel.toFirestore());
-    const addedDoc = await getDoc(docRef);
-    
-    // Invalidate cache for this post's comments
-    cacheManager.clearNamespace('COMMENTS');
-    
-    return Comment.fromFirestore(addedDoc);
-  },
-
-  // Update a comment
-  async updateComment(id, comment) {
-    if (!checkFirestore()) return null;
-    const docRef = doc(db, COMMENTS_COLLECTION, id);
-    const updateData = new Comment(comment).toFirestore();
-    await updateDoc(docRef, updateData);
-    const updatedDoc = await getDoc(docRef);
-    
-    // Invalidate cache
-    cacheManager.clearNamespace('COMMENTS');
-    
-    return Comment.fromFirestore(updatedDoc);
-  },
-
-  // Delete a comment
-  async deleteComment(id) {
-    if (!checkFirestore()) return null;
-    const docRef = doc(db, COMMENTS_COLLECTION, id);
-    await deleteDoc(docRef);
-    
-    // Invalidate cache
-    cacheManager.clearNamespace('COMMENTS');
-  },
-
-  // Get a single comment by ID
+  /**
+   * Get a single comment by ID
+   */
   async getCommentById(id) {
-    if (!checkFirestore()) return null;
+    const comment = await this.getById(id, CACHE_CONFIG.COMMENTS.BY_ID);
+    return comment ? transformComment(comment) : null;
+  }
+
+  /**
+   * Add a new comment
+   */
+  async addComment(commentData) {
+    const commentModel = new Comment(commentData);
+    const data = commentModel.toFirestore();
+
+    const result = await this.create(data, transformComment);
     
-    const cached = cacheManager.get('COMMENTS', `id_${id}`);
-    if (cached) {
-      console.log('📦 [Comments Cache] Using cached comment:', id);
-      return cached;
-    }
+    // Invalidate all comment caches to refresh lists
+    this.invalidateCache();
     
-    console.log('📦 [Comments Cache] Cache miss for comment ID:', id);
+    return result;
+  }
+
+  /**
+   * Update a comment
+   */
+  async updateComment(id, commentData) {
+    const commentModel = new Comment(commentData);
+    const data = commentModel.toFirestore();
+
+    await this.update(id, data);
     
-    // Use request coalescing
-    const coalescingKey = `COMMENTS:id_${id}`;
-    return cacheManager.getWithCoalescing(coalescingKey, async () => {
-      const docRef = doc(db, COMMENTS_COLLECTION, id);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        return null;
-      }
-      
-      const comment = Comment.fromFirestore(docSnap);
-      cacheManager.set('COMMENTS', `id_${id}`, comment, CACHE_CONFIG.COMMENTS.BY_ID);
-      return comment;
-    });
-  },
-};
+    // Invalidate cache
+    this.invalidateCache();
+    
+    // Fetch and return updated comment
+    return this.getCommentById(id);
+  }
+
+  /**
+   * Delete a comment
+   */
+  async deleteComment(id) {
+    const result = await this.delete(id);
+    
+    // Invalidate cache
+    this.invalidateCache();
+    
+    return result;
+  }
+}
+
+// Export singleton instance
+export const commentService = new CommentService();
+
 

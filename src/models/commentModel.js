@@ -5,7 +5,7 @@ export class Comment {
   constructor({ id, postId, user, text, createdAt, updatedAt }) {
     this.id = id || null;
     this.postId = postId || null;
-    this.user = user || { id: null, name: 'Anonymous', email: null };
+    this.user = user || { id: null, name: 'Anonymous', email: null, username: null };
     this.text = text || '';
     this.createdAt = TimeUtil.toISOString(createdAt) || new Date().toISOString();
     this.updatedAt = TimeUtil.toISOString(updatedAt) || new Date().toISOString();

@@ -1,7 +1,12 @@
+/**
+ * Firebase Configuration
+ * Only using Firestore - NO Firebase Auth or Storage
+ * Auth is handled by custom server-side JWT system
+ * File storage is handled by Vercel Blob
+ */
+
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 
 // Check if Firebase credentials are configured
 const isFirebaseConfigured = () => {
@@ -22,15 +27,11 @@ const firebaseConfig = {
 
 // Initialize Firebase only if configured
 let app = null;
-let auth = null;
 let db = null;
-let storage = null;
 
 if (isFirebaseConfigured()) {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-  auth = getAuth(app);
   db = getFirestore(app);
-  storage = getStorage(app);
 } else {
   console.warn(
     '⚠️  Firebase is not configured. Please add your Firebase credentials to .env.local\n' +
@@ -38,5 +39,7 @@ if (isFirebaseConfigured()) {
   );
 }
 
-export { auth, db, storage };
+// Export only Firestore - NO auth or storage
+export { db };
 export default app;
+

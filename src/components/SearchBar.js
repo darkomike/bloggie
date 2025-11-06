@@ -109,9 +109,9 @@ export default function SearchBar() {
   };
 
   return (
-    <div ref={searchRef} className="relative hidden md:block">
+    <div ref={searchRef} className="relative hidden md:flex md:flex-1 md:max-w-xl">
       {/* Search Input */}
-      <div className="relative">
+      <div className="relative w-full">
         <input
           ref={inputRef}
           type="text"
@@ -119,7 +119,7 @@ export default function SearchBar() {
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
           onFocus={() => setIsOpen(true)}
-          className="w-full sm:w-64 px-4 py-2 pl-10 pr-10 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+          className="w-full px-4 py-2 pl-10 pr-10 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
         />
         
         {/* Search Icon */}

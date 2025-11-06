@@ -8,9 +8,14 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'iiogqwy4rbrtgwpl.public.blob.vercel-storage.com',
+      },
+      {
+        protocol: 'https',
         hostname: '**.firebasestorage.com',
       },
     ],
+    unoptimized: false,
   },
 };
 

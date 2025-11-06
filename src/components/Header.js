@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '@/components/AuthProvider';
+import { useUI } from '@/components/UIProvider';
 import { usePathname, useRouter } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import SearchBar from './SearchBar';
@@ -14,25 +14,31 @@ const isActiveLink = (href, pathname) => {
 };
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user, signOut, loading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
+  // Auth context
+  const { user, loading: authLoading, initializing, signOut } = useAuth();
+  
+  // UI context
+  const { mobileMenuOpen, userMenuOpen, setMobileMenuOpen, setUserMenuOpen } = useUI();
+
+  // Debug logging
+  console.log('Header render - User:', user?.email, 'Loading:', authLoading, 'Initializing:', initializing);
+  console.log('Header render - photoURL:', user?.photoURL);
+
   const handleSignOut = async () => {
     try {
-      // Redirect first to homepage
-      router.push('/');
-      // Then sign out
-      await signOut();
       setUserMenuOpen(false);
+      await signOut();
+      // Navigate to home and clear history stack
+      router.push('/');
+      router.refresh(); // Force a refresh to clear any cached state
     } catch (error) {
       console.error('Sign out error:', error);
     }
   };
 
-  // Create auth links with redirect parameter (don't redirect from auth pages themselves)
   const getLoginLink = () => {
     if (pathname === '/login' || pathname === '/signup') {
       return '/login';
@@ -91,31 +97,26 @@ export default function Header() {
               Categories
             </Link>
 
-            {/* New Post Button (visible when logged in) */}
-            {!loading && user && (
-              <Link
-                href="/blog/new"
-                className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 flex items-center gap-2"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                New Post
-              </Link>
-            )}
+            
           </div>
 
           {/* Right Side: Search, Theme Toggle & Auth */}
-          <div className="flex items-center justify-end flex-1 gap-8">
-            <div className="flex items-center gap-8">
+          <div className="flex items-center justify-end flex-1 gap-4 sm:gap-6 lg:gap-8">
+            <div className="hidden lg:flex items-center gap-6 flex-1">
               <SearchBar />
               <ThemeToggle />
             </div>
 
-            {!loading && (
+            <div className="lg:hidden flex items-center gap-4 flex-1">
+              <SearchBar />
+              <ThemeToggle />
+            </div>
+
+            {/* Show user state when not loading or initializing */}
+            {!authLoading && !initializing && (
               <>
                 {user ? (
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
                       className="flex items-center justify-center rounded-full hover:opacity-80 transition-opacity"
@@ -123,14 +124,18 @@ export default function Header() {
                     >
                       {user.photoURL ? (
                         <Image
+                          key={user.photoURL}
                           src={user.photoURL}
                           alt={user.displayName || 'User'}
                           width={40}
                           height={40}
                           className="h-10 w-10 rounded-full object-cover shadow-md shrink-0"
+                          onError={(e) => {
+                            console.error('Failed to load avatar image:', user.photoURL);
+                          }}
                         />
                       ) : (
-                        <div className="h-10 w-10 shrink-0 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                        <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
                           {user.displayName?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                         </div>
                       )}
@@ -140,8 +145,18 @@ export default function Header() {
                       <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800 overflow-hidden">
                         <div className="py-1">
                           <Link
+                            href="/blog/new"
+                            className="flex px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-blue-900/20 transition-colors font-medium items-center gap-2"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            New Post
+                          </Link>
+                          <Link
                             href="/profile"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors font-medium flex items-center gap-2"
+                            className="flex px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors font-medium items-center gap-2"
                             onClick={() => setUserMenuOpen(false)}
                           >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -151,7 +166,7 @@ export default function Header() {
                           </Link>
                           <Link
                             href="/dashboard"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors font-medium flex items-center gap-2"
+                            className="flex px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors font-medium items-center gap-2"
                             onClick={() => setUserMenuOpen(false)}
                           >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -173,16 +188,16 @@ export default function Header() {
                     )}
                   </div>
                 ) : (
-                  <div className="hidden md:flex md:items-center md:gap-2">
+                  <div className="hidden md:flex md:items-center md:gap-3 md:whitespace-nowrap md:shrink-0">
                     <Link
                       href={getLoginLink()}
-                      className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800"
+                      className="rounded-lg px-6 py-2.5 text-sm font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800"
                     >
                       Sign in
                     </Link>
                     <Link
                       href={getSignupLink()}
-                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-all shadow-md hover:shadow-lg dark:bg-blue-500 dark:hover:bg-blue-600"
+                      className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-all shadow-md hover:shadow-lg dark:bg-blue-500 dark:hover:bg-blue-600"
                     >
                       Sign up
                     </Link>
@@ -249,7 +264,7 @@ export default function Header() {
               </Link>
 
               {/* Profile & Dashboard links (visible when logged in) */}
-              {!loading && user && (
+              {!authLoading && user && (
                 <>
                   <Link
                     href="/blog/new"
@@ -264,7 +279,7 @@ export default function Header() {
                 </>
               )}
               
-              {!loading && !user && (
+              {!authLoading && !user && (
                 <div className="space-y-1 border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                   <Link
                     href={getLoginLink()}
@@ -283,7 +298,7 @@ export default function Header() {
                 </div>
               )}
 
-              {!loading && user && (
+              {!authLoading && user && (
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                   <button
                     onClick={() => {

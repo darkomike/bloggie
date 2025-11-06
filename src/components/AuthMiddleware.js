@@ -23,7 +23,7 @@ const AUTH_ROUTES = new Set(['/login', '/signup']);
  * Shows loading UI while checking auth state
  */
 export default function AuthMiddleware({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading, initializing } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -38,35 +38,40 @@ export default function AuthMiddleware({ children }) {
   }, [pathname]);
 
   useEffect(() => {
-    if (!loading) {
-      // Redirect to login if trying to access protected route without auth
-      if (routeType.isProtectedRoute && !user) {
-        const redirectUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
-        console.log('AuthMiddleware redirect:', redirectUrl);
-        router.push(redirectUrl);
+    if (initializing || loading) {
+      return;
+    }
+
+    // Redirect to login if trying to access protected route without auth
+    if (routeType.isProtectedRoute && !user) {
+      const redirectUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
+      console.log('AuthMiddleware redirect:', redirectUrl);
+      router.push(redirectUrl);
+      return;
+    }
+
+    if (routeType.isAuthRoute && user) {
+      const searchParams = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search)
+        : null;
+      const redirect = searchParams?.get('redirect');
+
+      if (redirect) {
+        console.log('AuthMiddleware redirect after login:', redirect);
+        router.push(redirect);
         return;
       }
 
-      // Redirect to blog page after user is logged in from a redirect from a blog page
-      if (routeType.isAuthRoute && user) {
-        const searchParams = new URLSearchParams(window.location.search);
-        const redirect = searchParams.get('redirect');
-        if (redirect) {
-          console.log('AuthMiddleware redirect after login:', redirect);
-          router.push(redirect);
-          return;
-        }
-      }
-
-      // Redirect to dashboard if trying to access auth pages while logged in
-      if (routeType.isAuthRoute && user) {
-        router.push('/dashboard');
-      }
+      router.push('/dashboard');
     }
-  }, [user, loading, pathname, router, routeType]);
+  }, [user, loading, initializing, pathname, router, routeType]);
 
-  // Show loading screen while checking auth
-  if (loading) {
+  // Show loading screen while the initial auth state is being resolved
+  if (initializing) {
+    return <LoadingScreen />;
+  }
+
+  if (routeType.isProtectedRoute && !user) {
     return <LoadingScreen />;
   }
 

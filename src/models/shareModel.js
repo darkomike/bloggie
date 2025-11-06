@@ -2,7 +2,7 @@ export class Share {
   constructor({ id, postId, user, platform, sharedAt, createdAt, isGuest }) {
     this.id = id || null;
     this.postId = postId || null;
-    this.user = user || { id: null, name: 'Anonymous', email: null };
+    this.user = user || { id: null, name: 'Anonymous', email: null, username: null };
     this.platform = platform || 'unknown';
     this.sharedAt = sharedAt || new Date().toISOString();
     this.createdAt = createdAt || new Date().toISOString();

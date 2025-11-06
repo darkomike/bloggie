@@ -30,6 +30,7 @@ export default function EditBlogPage() {
   });
   const [coverImage, setCoverImage] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState('');
+  const [existingCoverImageUrl, setExistingCoverImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -91,6 +92,10 @@ export default function EditBlogPage() {
         });
         if (post.coverImage) {
           setCoverImagePreview(post.coverImage);
+          setExistingCoverImageUrl(post.coverImage);
+        } else {
+          setCoverImagePreview('');
+          setExistingCoverImageUrl('');
         }
       } catch (err) {
         console.error('Error fetching post:', err);
@@ -164,20 +169,22 @@ export default function EditBlogPage() {
     setError('');
 
     try {
-      let coverImageUrl = coverImagePreview;
+      let coverImageUrl = existingCoverImageUrl;
       // Upload new cover image if changed
       if (coverImage) {
         setUploading(true);
         // Delete old image if exists
-        if (coverImagePreview) {
+        if (existingCoverImageUrl && existingCoverImageUrl.startsWith('http')) {
           try {
-            await deleteBlob(coverImagePreview);
+            await deleteBlob(existingCoverImageUrl);
           } catch (err) {
             console.warn('Could not delete old image:', err);
           }
         }
         coverImageUrl = await uploadBlogCover(coverImage);
         setUploading(false);
+        setExistingCoverImageUrl(coverImageUrl);
+        setCoverImagePreview(coverImageUrl);
       }
       // Update blog post using blogService
       await blogService.updatePost(postId, {

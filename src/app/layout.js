@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/AuthProvider";
+import { UIProvider } from "@/components/UIProvider";
 import AuthMiddleware from "@/components/AuthMiddleware";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
@@ -70,20 +71,22 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors`}
       >
-        <ThemeProvider>
-          <AuthProvider>
-            <AuthMiddleware>
-              <Header />
-              <main className="min-h-screen pt-16">
-                {children}
-              </main>
-              <Footer />
-              <ScrollToTop />
-              <SpeedInsights />
-              <Analytics />
-            </AuthMiddleware>
-          </AuthProvider>
-        </ThemeProvider>
+        <UIProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <AuthMiddleware>
+                <Header />
+                <main className="min-h-screen pt-16">
+                  {children}
+                </main>
+                <Footer />
+                <ScrollToTop />
+                <SpeedInsights />
+                <Analytics />
+              </AuthMiddleware>
+            </AuthProvider>
+          </ThemeProvider>
+        </UIProvider>
       </body>
     </html>
   );
