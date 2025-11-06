@@ -135,7 +135,7 @@ export default function BlogPost({ post }) {
                       rel="noopener noreferrer"
                       className="text-gray-600 hover:text-blue-500"
                     >
-                      Twitter
+                      X
                     </a>
                   )}
                   {post.author.social.github && (
