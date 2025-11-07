@@ -1096,7 +1096,7 @@ This project is private and proprietary.
 
 ## 👨‍💻 Author
 
-**Darko Mike**
+**Michael Ofosu Darko**
 - GitHub: [@darkomike](https://github.com/darkomike)
 
 ## 🙏 Acknowledgments
