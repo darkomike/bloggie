@@ -1,442 +1,881 @@
-# 📝 Bloggie - Professional Blog Platform# Bloggie - Professional Blog Platform
+# Bloggie - Professional Blog Platform# 📝 Bloggie - Professional Blog Platform# Bloggie - Professional Blog Platform
 
 
 
-A modern, full-featured blog web application built with Next.js 15, Firebase, and cutting-edge React 19. Features custom JWT authentication, real-time engagement tracking, and a beautiful responsive UI with dark mode support.A modern, clean, and professional blog web application built with Next.js 15, Firebase, and Resend for email services.
+A modern, full-featured blogging platform built with Next.js 15, React 19, and Firebase. Features custom authentication, real-time engagement, analytics dashboard, and a beautiful dark mode interface.
 
 
 
-![Next.js](https://img.shields.io/badge/Next.js-15.0.4-black)## 🚀 Features
+## ✨ Key FeaturesA modern, full-featured blog web application built with Next.js 15, Firebase, and cutting-edge React 19. Features custom JWT authentication, real-time engagement tracking, and a beautiful responsive UI with dark mode support.A modern, clean, and professional blog web application built with Next.js 15, Firebase, and Resend for email services.
 
-![React](https://img.shields.io/badge/React-19.0.0-blue)
 
-![Firebase](https://img.shields.io/badge/Firebase-11.0.2-orange)- **Modern Tech Stack**: Built with Next.js 15 (App Router), React 19, and JavaScript
 
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.1-38bdf8)- **Firebase Backend**: Firestore for database (NO Firebase Auth or Storage)
+**Content Management**
 
-- **Custom Authentication**: Server-side JWT-based authentication system
+- Create, edit, and publish blog posts with markdown support
 
-## 🌟 Features- **Email Integration**: Resend for newsletter and contact form emails
+- Category organization and tagging system![Next.js](https://img.shields.io/badge/Next.js-15.0.4-black)## 🚀 Features
 
-- **Responsive Design**: Mobile-first design with TailwindCSS
+- Draft and published post management
 
-### Core Functionality- **SEO Optimized**: Server-side rendering for better SEO
+- Rich text editing experience![React](https://img.shields.io/badge/React-19.0.0-blue)
 
-- ✍️ **Rich Text Blogging** - Create, edit, and publish blog posts with markdown support- **Clean Architecture**: Well-organized code structure following SOLID principles
 
-- 👤 **Custom Authentication** - Server-side JWT authentication (no Firebase Auth)
 
-- 📊 **Analytics Dashboard** - Comprehensive insights with charts and statistics## 📁 Project Structure
+**User System**![Firebase](https://img.shields.io/badge/Firebase-11.0.2-orange)- **Modern Tech Stack**: Built with Next.js 15 (App Router), React 19, and JavaScript
 
-- 💬 **Comment System** - Real-time commenting with user engagement
+- Custom JWT authentication (no Firebase Auth)
 
-- ❤️ **Like & Share** - Social engagement features with tracking```
+- User profiles with photo uploads![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.1-38bdf8)- **Firebase Backend**: Firestore for database (NO Firebase Auth or Storage)
 
-- 👁️ **View Tracking** - Monitor post views and reader engagementbloggie/
+- Follow system to connect with other users
 
-- 🔍 **Search & Categories** - Easy content discovery├── src/
+- Personal analytics dashboard- **Custom Authentication**: Server-side JWT-based authentication system
 
-- 📧 **Newsletter Integration** - Email subscriptions via Resend│   ├── app/                    # Next.js App Router pages
 
-- 🌓 **Dark Mode** - Beautiful theme toggle with system preference detection│   │   ├── api/               # API routes
 
-- 📱 **Fully Responsive** - Mobile-first design│   │   │   ├── contact/       # Contact form API
+**Engagement**## 🌟 Features- **Email Integration**: Resend for newsletter and contact form emails
+
+- Comment system with real-time updates
+
+- Like and share functionality- **Responsive Design**: Mobile-first design with TailwindCSS
+
+- View tracking and analytics
+
+- Social sharing (X, Facebook, LinkedIn, WhatsApp)### Core Functionality- **SEO Optimized**: Server-side rendering for better SEO
+
+
+
+**UI/UX**- ✍️ **Rich Text Blogging** - Create, edit, and publish blog posts with markdown support- **Clean Architecture**: Well-organized code structure following SOLID principles
+
+- Dark mode with theme persistence
+
+- Fully responsive mobile-first design- 👤 **Custom Authentication** - Server-side JWT authentication (no Firebase Auth)
+
+- Beautiful gradient designs and animations
+
+- Loading states and empty state designs- 📊 **Analytics Dashboard** - Comprehensive insights with charts and statistics## 📁 Project Structure
+
+
+
+**Additional Features**- 💬 **Comment System** - Real-time commenting with user engagement
+
+- Newsletter subscription via Resend
+
+- Contact form with email notifications- ❤️ **Like & Share** - Social engagement features with tracking```
+
+- Search and category filtering
+
+- SEO optimized with SSR- 👁️ **View Tracking** - Monitor post views and reader engagementbloggie/
+
+
+
+## 🛠️ Tech Stack- 🔍 **Search & Categories** - Easy content discovery├── src/
+
+
+
+**Frontend**- 📧 **Newsletter Integration** - Email subscriptions via Resend│   ├── app/                    # Next.js App Router pages
+
+- Next.js 15.0.4 (App Router)
+
+- React 19.0.0- 🌓 **Dark Mode** - Beautiful theme toggle with system preference detection│   │   ├── api/               # API routes
+
+- TailwindCSS 3.4.1
+
+- React Icons 5.4.0- 📱 **Fully Responsive** - Mobile-first design│   │   │   ├── contact/       # Contact form API
+
+- Recharts 2.15.0 (for analytics)
 
 │   │   │   └── newsletter/    # Newsletter subscription API
 
-### User Features│   │   ├── layout.js          # Root layout
+**Backend & Services**
 
-- **User Profiles** - Customizable profiles with photo uploads (Vercel Blob storage)│   │   ├── page.js            # Home page
+- Firebase 11.0.2 (Firestore database)### User Features│   │   ├── layout.js          # Root layout
 
-- **Follow System** - Follow other users and build your network│   │   └── globals.css        # Global styles
+- Vercel Blob (file storage)
 
-- **Personal Dashboard** - Track your content performance│   ├── components/            # React components
+- Resend 4.0.1 (email service)- **User Profiles** - Customizable profiles with photo uploads (Vercel Blob storage)│   │   ├── page.js            # Home page
+
+
+
+**Authentication & Security**- **Follow System** - Follow other users and build your network│   │   └── globals.css        # Global styles
+
+- JSON Web Tokens (jsonwebtoken 9.0.2)
+
+- bcrypt 5.1.1 (password hashing)- **Personal Dashboard** - Track your content performance│   ├── components/            # React components
+
+- Custom server-side authentication
 
 - **Social Sharing** - Share posts on X (Twitter), Facebook, LinkedIn, WhatsApp│   │   ├── Header.js          # Navigation header
 
-- **Recent Activity** - View liked posts and comments on your content│   │   ├── Footer.js          # Footer component
+**State Management**
 
-│   │   ├── BlogCard.js        # Blog post card
+- React Context API (AuthProvider, ThemeProvider)- **Recent Activity** - View liked posts and comments on your content│   │   ├── Footer.js          # Footer component
 
-### Technical Highlights│   │   ├── BlogPost.js        # Full blog post display
+- Custom hooks for data fetching
 
-- **Server-Side Rendering** - Fast page loads and SEO optimization│   │   └── NewsletterForm.js  # Newsletter subscription form
+- Client-side caching with invalidation│   │   ├── BlogCard.js        # Blog post card
 
-- **React Context API** - Clean state management (no external dependencies)│   └── lib/                   # Library code and services
 
-- **Service-Based Architecture** - Modular, maintainable codebase│       ├── firebase/          # Firebase configuration and services
 
-- **SOLID Principles** - Clean code architecture│       │   ├── config.js      # Firebase initialization
+## 📁 Project Structure### Technical Highlights│   │   ├── BlogPost.js        # Full blog post display
 
-- **Cache Management** - Optimized data fetching with invalidation│       │   └── blog-service.js # Blog CRUD operations
 
-- **Type Safety** - PropTypes validation throughout│       └── resend/            # Email service
 
-- **Security** - JWT tokens, environment variables, input validation│           └── email-service.js # Email sending functions
+```- **Server-Side Rendering** - Fast page loads and SEO optimization│   │   └── NewsletterForm.js  # Newsletter subscription form
 
-├── public/                    # Static files
+bloggie/
 
-## 🏗️ Architecture├── .env.example              # Environment variables template
+├── src/- **React Context API** - Clean state management (no external dependencies)│   └── lib/                   # Library code and services
 
-├── package.json              # Dependencies
+│   ├── app/                    # Next.js pages & routes
 
-### Project Structure├── tailwind.config.js        # Tailwind CSS configuration
+│   │   ├── api/               # API endpoints- **Service-Based Architecture** - Modular, maintainable codebase│       ├── firebase/          # Firebase configuration and services
 
-```├── next.config.mjs           # Next.js configuration
+│   │   │   ├── auth/          # Login, signup, logout, session
 
-bloggie/└── README.md                 # This file
+│   │   │   ├── contact/       # Contact form handler- **SOLID Principles** - Clean code architecture│       │   ├── config.js      # Firebase initialization
 
-├── src/```
+│   │   │   ├── newsletter/    # Newsletter subscription
 
-│   ├── app/                    # Next.js App Router
+│   │   │   └── upload/        # Image upload (Vercel Blob)- **Cache Management** - Optimized data fetching with invalidation│       │   └── blog-service.js # Blog CRUD operations
 
-│   │   ├── api/               # API routes## 🛠️ Tech Stack
+│   │   ├── blog/              # Blog pages
 
-│   │   │   ├── auth/          # Authentication endpoints
+│   │   ├── dashboard/         # User dashboard with analytics- **Type Safety** - PropTypes validation throughout│       └── resend/            # Email service
 
-│   │   │   ├── contact/       # Contact form handler- **Framework**: Next.js 15 (App Router)
+│   │   ├── profile/           # User profile page
 
-│   │   │   ├── newsletter/    # Newsletter subscription- **Language**: JavaScript (ES6+)
+│   │   ├── login/             # Login page- **Security** - JWT tokens, environment variables, input validation│           └── email-service.js # Email sending functions
 
-│   │   │   └── upload/        # File upload (Vercel Blob)- **Styling**: TailwindCSS with Typography plugin
+│   │   └── signup/            # Registration page
 
-│   │   ├── blog/              # Blog pages- **Database**: Firebase Firestore
+│   │├── public/                    # Static files
 
-│   │   │   ├── [slug]/        # Individual post pages- **Authentication**: Custom Server-Side JWT Authentication
+│   ├── components/            # React components
 
-│   │   │   ├── edit/          # Post editor- **Storage**: Vercel Blob
+│   │   ├── AuthProvider.js   # Authentication context## 🏗️ Architecture├── .env.example              # Environment variables template
 
-│   │   │   └── new/           # Create new post- **Email**: Resend
+│   │   ├── ThemeProvider.js  # Dark/light mode
 
-│   │   ├── dashboard/         # User dashboard- **Markdown**: React Markdown with Syntax Highlighting
+│   │   ├── Header.js          # Navigation├── package.json              # Dependencies
 
-│   │   ├── profile/           # User profile- **Date Handling**: date-fns
+│   │   ├── Footer.js          # Footer
 
-│   │   ├── category/          # Category pages- **State Management**: React Context API (built-in)
-
-│   │   ├── login/             # Login page
-
-│   │   ├── signup/            # Registration page## 📋 Prerequisites
-
-│   │   └── layout.js          # Root layout
-
-│   │- Node.js 18+ and npm
-
-│   ├── components/            # React components- A Firebase account
-
-│   │   ├── AuthProvider.js   # Authentication context- A Resend account (for email services)
-
-│   │   ├── ThemeProvider.js  # Theme management
-
-│   │   ├── Header.js          # Navigation header## ⚙️ Setup Instructions
-
-│   │   ├── Footer.js          # Site footer
-
-│   │   ├── BlogCard.js        # Blog post preview### 1. Install dependencies
+│   │   ├── BlogCard.js        # Post preview card### Project Structure├── tailwind.config.js        # Tailwind CSS configuration
 
 │   │   ├── BlogPost.js        # Full post display
 
-│   │   ├── NewsletterForm.js  # Newsletter subscription```bash
-
-│   │   └── ...                # Other componentsnpm install
-
-│   │```
-
-│   ├── lib/                   # Core libraries
-
-│   │   ├── firebase/          # Firebase services### 2. Firebase Setup
-
-│   │   │   ├── config.js      # Firebase configuration
-
-│   │   │   ├── blog-service.js1. Go to [Firebase Console](https://console.firebase.google.com/)
-
-│   │   │   ├── comment-service.js2. Create a new project
-
-│   │   │   ├── like-service.js3. Enable Firestore Database
-
-│   │   │   ├── view-service.js
-
-│   │   │   ├── share-service.js### 3. Resend Setup
-
-│   │   │   ├── follow-service.js
-
-│   │   │   ├── user-service.js1. Sign up at [Resend](https://resend.com/)
-
-│   │   │   └── newsletter-service.js2. Get your API key from the dashboard
-
-│   │   │
-
-│   │   ├── auth/              # Authentication### 4. Environment Variables
-
-│   │   │   ├── jwtUtils.js    # JWT token handling
-
-│   │   │   ├── passwordUtils.js # Password hashing (bcrypt)Create a `.env.local` file:
-
-│   │   │   └── authConfig.js  # Auth configuration
-
-│   │   │```bash
-
-│   │   ├── cache/             # Cache managementcp .env.example .env.local
-
-│   │   │   ├── cacheManager.js```
-
-│   │   │   ├── cacheInvalidation.js
-
-│   │   │   └── cacheConfig.jsUpdate with your credentials (see .env.example for details)
-
-│   │   │
-
-│   │   ├── resend/            # Email service### 5. Run the development server
-
-│   │   │   └── ...
-
-│   │   │```bash
-
-│   │   └── vercel-blob-service.js # Image uploadsnpm run dev
-
-│   │```
-
-│   ├── models/                # Data models
-
-│   │   ├── postModel.jsOpen [http://localhost:3000](http://localhost:3000)
-
-│   │   ├── commentModel.js
-
-│   │   ├── userModel.js## 📝 Available Scripts
-
-│   │   ├── likeModel.js
-
-│   │   ├── viewModel.js- `npm run dev` - Start development server with Turbopack
-
-│   │   ├── shareModel.js- `npm run build` - Build for production
-
-│   │   └── followModel.js- `npm start` - Start production server
-
-│   │- `npm run lint` - Run ESLint
-
-│   ├── hooks/                 # Custom React hooks
-
-│   │   └── useCachedData.js## 🎨 Key Components
+│   │   └── ...```├── next.config.mjs           # Next.js configuration
 
 │   │
 
-│   └── utils/                 # Utility functions- **Header**: Navigation with responsive menu
+│   ├── lib/                   # Core librariesbloggie/└── README.md                 # This file
 
-│       ├── timeUtils.js- **Footer**: Links and newsletter signup
+│   │   ├── firebase/          # Firebase services
 
-│       └── stringUtils.js- **BlogCard**: Preview card for blog posts
+│   │   │   ├── blog-service.js├── src/```
 
-│- **BlogPost**: Full post with markdown support
+│   │   │   ├── comment-service.js
 
-├── public/                    # Static assets- **NewsletterForm**: Email subscription form
+│   │   │   ├── like-service.js│   ├── app/                    # Next.js App Router
 
-│   └── assets/
+│   │   │   ├── view-service.js
 
-│       ├── icons/## 🔒 Security
+│   │   │   ├── user-service.js│   │   ├── api/               # API routes## 🛠️ Tech Stack
 
-│       └── images/
+│   │   │   └── ...
 
-│- Firebase Security Rules configured
+│   │   ├── auth/              # JWT & password utilities│   │   │   ├── auth/          # Authentication endpoints
 
-└── config files               # Configuration- Environment variables for secrets
+│   │   ├── cache/             # Cache management
 
-    ├── next.config.js         # Next.js config- Input validation on API routes
+│   │   └── resend/            # Email service│   │   │   ├── contact/       # Contact form handler- **Framework**: Next.js 15 (App Router)
 
-    ├── tailwind.config.js     # Tailwind CSS config- CSRF protection via Next.js
+│   │
 
-    ├── eslint.config.mjs      # ESLint rules
+│   ├── models/                # Data models│   │   │   ├── newsletter/    # Newsletter subscription- **Language**: JavaScript (ES6+)
 
-    └── package.json           # Dependencies## 📦 Deployment
+│   │   ├── postModel.js
+
+│   │   ├── userModel.js│   │   │   └── upload/        # File upload (Vercel Blob)- **Styling**: TailwindCSS with Typography plugin
+
+│   │   ├── commentModel.js
+
+│   │   └── ...│   │   ├── blog/              # Blog pages- **Database**: Firebase Firestore
+
+│   │
+
+│   └── utils/                 # Utility functions│   │   │   ├── [slug]/        # Individual post pages- **Authentication**: Custom Server-Side JWT Authentication
+
+│
+
+└── public/                    # Static assets│   │   │   ├── edit/          # Post editor- **Storage**: Vercel Blob
 
 ```
 
-Deploy to Vercel with one click or any Next.js compatible platform.
+│   │   │   └── new/           # Create new post- **Email**: Resend
 
 ## 🚀 Getting Started
 
----
+│   │   ├── dashboard/         # User dashboard- **Markdown**: React Markdown with Syntax Highlighting
 
 ### Prerequisites
 
-- Node.js 18+ and npm/yarnBuilt with ❤️ using Next.js, Firebase, and Resend
+- Node.js 18 or higher│   │   ├── profile/           # User profile- **Date Handling**: date-fns
 
-- Firebase project (Firestore + Storage)
+- npm or yarn
+
+- Firebase project│   │   ├── category/          # Category pages- **State Management**: React Context API (built-in)
 
 - Vercel Blob storage account
 
-- Resend account (for emails)```bash
+- Resend account│   │   ├── login/             # Login page
+
+
+
+### Installation│   │   ├── signup/            # Registration page## 📋 Prerequisites
+
+
+
+1. **Clone the repository**│   │   └── layout.js          # Root layout
+
+```bash
+
+git clone https://github.com/darkomike/bloggie.git│   │- Node.js 18+ and npm
+
+cd bloggie
+
+```│   ├── components/            # React components- A Firebase account
+
+
+
+2. **Install dependencies**│   │   ├── AuthProvider.js   # Authentication context- A Resend account (for email services)
+
+```bash
+
+npm install│   │   ├── ThemeProvider.js  # Theme management
+
+```
+
+│   │   ├── Header.js          # Navigation header## ⚙️ Setup Instructions
+
+3. **Environment Setup**
+
+│   │   ├── Footer.js          # Site footer
+
+Create a `.env.local` file in the root directory:
+
+│   │   ├── BlogCard.js        # Blog post preview### 1. Install dependencies
+
+```env
+
+# Firebase Configuration│   │   ├── BlogPost.js        # Full post display
+
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com│   │   ├── NewsletterForm.js  # Newsletter subscription```bash
+
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com│   │   └── ...                # Other componentsnpm install
+
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id│   │```
+
+
+
+# JWT Secret (use a strong random string, min 32 characters)│   ├── lib/                   # Core libraries
+
+JWT_SECRET=your_super_secret_jwt_key_here
+
+│   │   ├── firebase/          # Firebase services### 2. Firebase Setup
+
+# Vercel Blob Storage
+
+BLOB_READ_WRITE_TOKEN=your_vercel_blob_token│   │   │   ├── config.js      # Firebase configuration
+
+
+
+# Resend Email Service│   │   │   ├── blog-service.js1. Go to [Firebase Console](https://console.firebase.google.com/)
+
+RESEND_API_KEY=your_resend_api_key
+
+```│   │   │   ├── comment-service.js2. Create a new project
+
+
+
+4. **Firebase Setup**│   │   │   ├── like-service.js3. Enable Firestore Database
+
+
+
+Create these Firestore collections:│   │   │   ├── view-service.js
+
+- `posts` - Blog posts
+
+- `users` - User profiles│   │   │   ├── share-service.js### 3. Resend Setup
+
+- `comments` - Post comments
+
+- `likes` - Like tracking│   │   │   ├── follow-service.js
+
+- `views` - View tracking
+
+- `shares` - Share tracking│   │   │   ├── user-service.js1. Sign up at [Resend](https://resend.com/)
+
+- `follows` - User follows
+
+- `newsletter` - Newsletter subscribers│   │   │   └── newsletter-service.js2. Get your API key from the dashboard
+
+- `contacts` - Contact form submissions
+
+│   │   │
+
+5. **Run Development Server**
+
+```bash│   │   ├── auth/              # Authentication### 4. Environment Variables
 
 npm run dev
 
-### Installation# or
-
-yarn dev
-
-1. **Clone the repository**# or
-
-   ```bashpnpm dev
-
-   git clone https://github.com/darkomike/bloggie.git# or
-
-   cd bloggiebun dev
-
-   ``````
+```│   │   │   ├── jwtUtils.js    # JWT token handling
 
 
 
-2. **Install dependencies**Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000`│   │   │   ├── passwordUtils.js # Password hashing (bcrypt)Create a `.env.local` file:
 
-   ```bash
 
-   npm installYou can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-   ```
+## 📊 Dashboard Features│   │   │   └── authConfig.js  # Auth configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-3. **Set up environment variables**
 
-   ## Learn More
+The user dashboard provides comprehensive analytics and content management:│   │   │```bash
 
-   Create `.env.local` in the root directory:
 
-   ```envTo learn more about Next.js, take a look at the following resources:
 
-   # Firebase Configuration
+**Statistics Overview**│   │   ├── cache/             # Cache managementcp .env.example .env.local
 
-   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- Total posts (published and drafts)
 
-   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Total views with average per post│   │   │   ├── cacheManager.js```
 
-   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+- Comments count and engagement metrics
 
-   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucketYou can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Total likes received│   │   │   ├── cacheInvalidation.js
 
-   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 
-   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id## Deploy on Vercel
 
-   
+**Analytics Charts**│   │   │   └── cacheConfig.jsUpdate with your credentials (see .env.example for details)
 
-   # JWT Secret (generate a strong random string)The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Post performance bar chart (views per post)
 
-   JWT_SECRET=your_super_secret_jwt_key_min_32_characters
+- Engagement breakdown pie chart (views, likes, comments)│   │   │
 
-   Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Category distribution overview
 
-   # Vercel Blob Storage
-   BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
-   
-   # Resend Email Service
-   RESEND_API_KEY=your_resend_api_key
-   ```
+│   │   ├── resend/            # Email service### 5. Run the development server
 
-4. **Configure Firebase**
-   
-   Set up Firestore collections:
-   - `posts` - Blog posts
-   - `users` - User profiles
-   - `comments` - Post comments
-   - `likes` - Like records
-   - `views` - View tracking
-   - `shares` - Share tracking
-   - `follows` - User follows
-   - `newsletter` - Newsletter subscriptions
-   - `contacts` - Contact form submissions
+**Activity Feeds**
 
-5. **Run the development server**
-   ```bash
-   npm run dev
-   ```
+- Recent posts table with status badges│   │   │   └── ...
 
-6. **Open your browser**
-   ```
-   http://localhost:3000
-   ```
+- Recent comments on your posts
 
-## 🔧 Configuration
+- Posts you've liked│   │   │```bash
 
-### Firebase Security Rules
+
+
+**Quick Actions**│   │   └── vercel-blob-service.js # Image uploadsnpm run dev
+
+- Create new post button
+
+- Edit profile link│   │```
+
+- View all posts
+
+│   ├── models/                # Data models
+
+## 🎨 Design System
+
+│   │   ├── postModel.jsOpen [http://localhost:3000](http://localhost:3000)
+
+**Color Palette**
+
+- Primary: Blue gradients (from-blue-500 to-indigo-600)│   │   ├── commentModel.js
+
+- Secondary: Purple/Pink gradients
+
+- Success: Emerald/Teal gradients│   │   ├── userModel.js## 📝 Available Scripts
+
+- Accent: Rose/Fuchsia gradients
+
+│   │   ├── likeModel.js
+
+**Components**
+
+- Gradient backgrounds with multi-stop colors│   │   ├── viewModel.js- `npm run dev` - Start development server with Turbopack
+
+- Glassmorphism effects (backdrop-blur)
+
+- Smooth animations and hover effects│   │   ├── shareModel.js- `npm run build` - Build for production
+
+- Responsive grid layouts (1/2/4 columns)
+
+- Loading skeletons and spinners│   │   └── followModel.js- `npm start` - Start production server
+
+- Empty states with helpful CTAs
+
+│   │- `npm run lint` - Run ESLint
+
+**Typography**
+
+- TailwindCSS Typography plugin for blog content│   ├── hooks/                 # Custom React hooks
+
+- Responsive font sizes
+
+- Line height optimization for readability│   │   └── useCachedData.js## 🎨 Key Components
+
+
+
+## 🔐 Authentication│   │
+
+
+
+Custom JWT-based authentication system:│   └── utils/                 # Utility functions- **Header**: Navigation with responsive menu
+
+
+
+**Features**│       ├── timeUtils.js- **Footer**: Links and newsletter signup
+
+- Secure password hashing with bcrypt
+
+- JWT tokens stored in HTTP-only cookies│       └── stringUtils.js- **BlogCard**: Preview card for blog posts
+
+- Server-side session validation
+
+- Protected API routes│- **BlogPost**: Full post with markdown support
+
+- Automatic session refresh
+
+├── public/                    # Static assets- **NewsletterForm**: Email subscription form
+
+**API Endpoints**
+
+- `POST /api/auth/signup` - User registration│   └── assets/
+
+- `POST /api/auth/login` - User login
+
+- `POST /api/auth/logout` - Session termination│       ├── icons/## 🔒 Security
+
+- `GET /api/auth/session` - Get current user
+
+│       └── images/
+
+**Security**
+
+- Passwords hashed with bcrypt (10 salt rounds)│- Firebase Security Rules configured
+
+- JWT tokens with expiration
+
+- Input validation on all forms└── config files               # Configuration- Environment variables for secrets
+
+- XSS protection
+
+- CSRF protection via HTTP-only cookies    ├── next.config.js         # Next.js config- Input validation on API routes
+
+
+
+## 📱 Social Features    ├── tailwind.config.js     # Tailwind CSS config- CSRF protection via Next.js
+
+
+
+**Engagement System**    ├── eslint.config.mjs      # ESLint rules
+
+- Comments with user avatars
+
+- One-click like functionality    └── package.json           # Dependencies## 📦 Deployment
+
+- View tracking (automatic)
+
+- Share buttons for multiple platforms```
+
+
+
+**Sharing Platforms**Deploy to Vercel with one click or any Next.js compatible platform.
+
+- X (Twitter) with hashtags
+
+- Facebook## 🚀 Getting Started
+
+- LinkedIn
+
+- WhatsApp---
+
+- Copy link with clipboard API
+
+### Prerequisites
+
+**Follow System**
+
+- Follow/unfollow users- Node.js 18+ and npm/yarnBuilt with ❤️ using Next.js, Firebase, and Resend
+
+- View follower counts
+
+- Follow lists and modals- Firebase project (Firestore + Storage)
+
+
+
+## 🗄️ Data Models- Vercel Blob storage account
+
+
+
+**Post**- Resend account (for emails)```bash
 
 ```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Users collection
-    match /users/{userId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth.uid == userId;
-    }
-    
-    // Posts collection
-    match /posts/{postId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth.uid == resource.data.author.id;
-    }
-    
-    // Comments collection
-    match /comments/{commentId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth.uid == resource.data.user.id;
-    }
-    
-    // Likes, Views, Shares, Follows
-    match /{collection}/{docId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow delete: if request.auth.uid == resource.data.userId;
-    }
-  }
+
+{npm run dev
+
+  id: string,
+
+  title: string,### Installation# or
+
+  slug: string,
+
+  content: string,          // Markdownyarn dev
+
+  excerpt: string,
+
+  category: string,1. **Clone the repository**# or
+
+  author: {
+
+    id: string,   ```bashpnpm dev
+
+    name: string,
+
+    email: string,   git clone https://github.com/darkomike/bloggie.git# or
+
+    username: string,
+
+    photoURL: string   cd bloggiebun dev
+
+  },
+
+  coverImage: string,   ``````
+
+  tags: string[],
+
+  published: boolean,
+
+  createdAt: ISO string,
+
+  updatedAt: ISO string2. **Install dependencies**Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
 }
+
+```   ```bash
+
+
+
+**User**   npm installYou can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+
+```javascript
+
+{   ```
+
+  id: string,
+
+  username: string,         // UniqueThis project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+  displayName: string,
+
+  email: string,3. **Set up environment variables**
+
+  photoURL: string,
+
+  bio: string,   ## Learn More
+
+  socialLinks: {
+
+    twitter: string,   Create `.env.local` in the root directory:
+
+    linkedin: string,
+
+    github: string,   ```envTo learn more about Next.js, take a look at the following resources:
+
+    website: string
+
+  },   # Firebase Configuration
+
+  createdAt: ISO string,
+
+  updatedAt: ISO string   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+
+}
+
+```   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+
+
+**Comment**   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+
+```javascript
+
+{   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucketYou can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+  id: string,
+
+  postId: string,   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+
+  user: {
+
+    id: string,   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id## Deploy on Vercel
+
+    name: string,
+
+    email: string,   
+
+    username: string
+
+  },   # JWT Secret (generate a strong random string)The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+  text: string,
+
+  createdAt: ISO string,   JWT_SECRET=your_super_secret_jwt_key_min_32_characters
+
+  updatedAt: ISO string
+
+}   Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
 ```
 
-### Tailwind Configuration
+   # Vercel Blob Storage
 
-Custom theme with dark mode support:
+## 🚀 Deployment   BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
+
+   
+
+**Vercel (Recommended)**   # Resend Email Service
+
+   RESEND_API_KEY=your_resend_api_key
+
+1. Push your code to GitHub   ```
+
+2. Import project in Vercel dashboard
+
+3. Add environment variables4. **Configure Firebase**
+
+4. Deploy automatically   
+
+   Set up Firestore collections:
+
+**Environment Variables Checklist**   - `posts` - Blog posts
+
+- ✅ All 6 Firebase config variables   - `users` - User profiles
+
+- ✅ JWT_SECRET   - `comments` - Post comments
+
+- ✅ BLOB_READ_WRITE_TOKEN   - `likes` - Like records
+
+- ✅ RESEND_API_KEY   - `views` - View tracking
+
+   - `shares` - Share tracking
+
+**Build Settings**   - `follows` - User follows
+
+- Framework Preset: Next.js   - `newsletter` - Newsletter subscriptions
+
+- Build Command: `npm run build`   - `contacts` - Contact form submissions
+
+- Output Directory: `.next`
+
+- Install Command: `npm install`5. **Run the development server**
+
+   ```bash
+
+## 🛠️ Development   npm run dev
+
+   ```
+
+**Available Scripts**
+
+```bash6. **Open your browser**
+
+npm run dev      # Start development server (port 3000)   ```
+
+npm run build    # Build for production   http://localhost:3000
+
+npm run start    # Start production server   ```
+
+npm run lint     # Run ESLint
+
+```## 🔧 Configuration
+
+
+
+**Code Guidelines**### Firebase Security Rules
+
+- Use functional components with hooks
+
+- PropTypes for type checking```javascript
+
+- Service layer for business logicrules_version = '2';
+
+- Error handling with try-catchservice cloud.firestore {
+
+- Loading states for async operations  match /databases/{database}/documents {
+
+- Cache invalidation on data changes    // Users collection
+
+    match /users/{userId} {
+
+## 🐛 Common Issues & Solutions      allow read: if true;
+
+      allow create: if request.auth != null;
+
+**Comments not showing on dashboard**      allow update, delete: if request.auth.uid == userId;
+
+- Verify comment data structure (use `comment.text` not `content`)    }
+
+- Check `comment.user.name` or `comment.user.username`    
+
+- View browser console for debug logs    // Posts collection
+
+    match /posts/{postId} {
+
+**User photo not updating after upload**      allow read: if true;
+
+- Session API bypasses cache for fresh data      allow create: if request.auth != null;
+
+- Check 2MB file size limit      allow update, delete: if request.auth.uid == resource.data.author.id;
+
+- Verify Vercel Blob token    }
+
+    
+
+**Dark mode not persisting**    // Comments collection
+
+- Check localStorage    match /comments/{commentId} {
+
+- Verify ThemeProvider wrapper in layout      allow read: if true;
+
+- Clear browser cache      allow create: if request.auth != null;
+
+      allow update, delete: if request.auth.uid == resource.data.user.id;
+
+**Build errors**    }
+
+- Run `npm run lint` to check for issues    
+
+- Verify all environment variables are set    // Likes, Views, Shares, Follows
+
+- Check Next.js and React versions compatibility    match /{collection}/{docId} {
+
+      allow read: if true;
+
+## 📈 Performance      allow create: if request.auth != null;
+
+      allow delete: if request.auth.uid == resource.data.userId;
+
+**Optimization Strategies**    }
+
+- Parallel data fetching with Promise.all  }
+
+- Client-side caching with smart invalidation}
+
+- Next.js Image optimization```
+
+- Code splitting by route
+
+- Lazy loading of heavy components### Tailwind Configuration
+
+- Indexed Firestore queries
+
+- Limited query results (pagination)Custom theme with dark mode support:
+
 - **Colors**: Blue, purple, emerald, pink gradients
-- **Typography**: Prose styling for blog content
-- **Responsive**: Mobile-first breakpoints
-- **Animations**: Smooth transitions and hover effects
+
+**Performance Metrics**- **Typography**: Prose styling for blog content
+
+- First Contentful Paint: < 1.5s- **Responsive**: Mobile-first breakpoints
+
+- Time to Interactive: < 3.0s- **Animations**: Smooth transitions and hover effects
+
+- Lighthouse Score: 90+
 
 ## 📊 Dashboard Features
 
-### Statistics Cards
-- **Total Posts** - All your published and draft posts
-- **Total Views** - Aggregate view count with average per post
-- **Comments** - Total discussions on your content
-- **Total Likes** - Engagement metrics
+## 🔒 Security Best Practices
 
-### Analytics Charts
-- **Post Performance** - Bar chart showing views per post
-- **Engagement Breakdown** - Pie chart (views, likes, comments)
+### Statistics Cards
+
+- ✅ JWT tokens for authentication- **Total Posts** - All your published and draft posts
+
+- ✅ bcrypt password hashing- **Total Views** - Aggregate view count with average per post
+
+- ✅ Server-side input validation- **Comments** - Total discussions on your content
+
+- ✅ XSS protection (sanitized inputs)- **Total Likes** - Engagement metrics
+
+- ✅ CSRF protection (HTTP-only cookies)
+
+- ✅ Environment variables for secrets### Analytics Charts
+
+- ✅ Firebase security rules configured- **Post Performance** - Bar chart showing views per post
+
+- ✅ 2MB file upload limit enforced- **Engagement Breakdown** - Pie chart (views, likes, comments)
+
 - **Category Distribution** - Content categorization overview
 
-### Recent Activity
-- **Recent Posts** - Last 5 articles with view counts and status
-- **Recent Comments** - Latest 5 comments on your posts
-- **Liked Posts** - Posts you've liked with preview
+## 📄 License
 
-### Quick Actions
-- Create new post
-- Edit profile
+### Recent Activity
+
+This project is private and proprietary.- **Recent Posts** - Last 5 articles with view counts and status
+
+- **Recent Comments** - Latest 5 comments on your posts
+
+## 👨‍💻 Author- **Liked Posts** - Posts you've liked with preview
+
+
+
+**Michael Ofosu Darko**### Quick Actions
+
+- GitHub: [@darkomike](https://github.com/darkomike)- Create new post
+
+- Project: [Bloggie](https://github.com/darkomike/bloggie)- Edit profile
+
 - Manage categories
+
+## 🙏 Acknowledgments
 
 ## 🎨 UI/UX Features
 
-### Design System
-- **Gradient Backgrounds** - Multi-stop vibrant gradients
-- **Glassmorphism** - Backdrop blur effects
-- **Micro-interactions** - Hover states, scale transforms, rotations
-- **Loading States** - Skeleton loaders and spinners
-- **Empty States** - Helpful messages with CTAs
-- **Toast Notifications** - User feedback
+Built with these amazing technologies:
 
-### Responsive Design
+- [Next.js](https://nextjs.org/) - React framework### Design System
+
+- [Firebase](https://firebase.google.com/) - Backend platform- **Gradient Backgrounds** - Multi-stop vibrant gradients
+
+- [Vercel](https://vercel.com/) - Hosting and blob storage- **Glassmorphism** - Backdrop blur effects
+
+- [Resend](https://resend.com/) - Email service- **Micro-interactions** - Hover states, scale transforms, rotations
+
+- [TailwindCSS](https://tailwindcss.com/) - CSS framework- **Loading States** - Skeleton loaders and spinners
+
+- [React Icons](https://react-icons.github.io/react-icons/) - Icon library- **Empty States** - Helpful messages with CTAs
+
+- [Recharts](https://recharts.org/) - Chart library- **Toast Notifications** - User feedback
+
+
+
+---### Responsive Design
+
 - Mobile: Single column, touch-optimized
-- Tablet: 2-column grid layouts
+
+**Built with ❤️ by Michael Ofosu Darko**- Tablet: 2-column grid layouts
+
 - Desktop: 4-column grids, side-by-side content
 
 ### Accessibility
